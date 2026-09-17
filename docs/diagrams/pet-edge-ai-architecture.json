@@ -1,0 +1,253 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Jetson Orin Nano 宠物状态应用技术架构",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [1390, 820],
+    "views": [
+      {
+        "id": "runtime_path",
+        "label": "实时主链路",
+        "focus": ["camera_sources", "input_adapters", "video_pipeline", "vision_runtime", "behavior_engine", "event_bus", "timeline_store", "sync_api", "companion_clients"],
+        "note": "从家庭视频到行为状态，再同步到电脑、手机与手表。"
+      },
+      {
+        "id": "model_delivery",
+        "label": "模型交付",
+        "focus": ["model_lab", "vision_runtime", "deployment_ops"],
+        "note": "训练、导出、TensorRT 构建、版本发布与回滚。"
+      },
+      {
+        "id": "reliability",
+        "label": "长期运行",
+        "focus": ["video_pipeline", "vision_runtime", "observability", "deployment_ops"],
+        "note": "监控丢帧、延迟、资源、温度，并处理断流与进程故障。"
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "camera_sources",
+      "type": "external",
+      "label": "家庭摄像头",
+      "sublabel": "CSI / USB / RTSP / 米家",
+      "pos": [34, 230],
+      "size": [154, 74]
+    },
+    {
+      "id": "input_adapters",
+      "type": "backend",
+      "label": "输入适配层",
+      "sublabel": "V4L2 · Argus · go2rtc",
+      "pos": [220, 230],
+      "size": [160, 74]
+    },
+    {
+      "id": "video_pipeline",
+      "type": "backend",
+      "label": "视频管线",
+      "sublabel": "GStreamer · 解码 · 抽帧",
+      "pos": [410, 230],
+      "size": [160, 74]
+    },
+    {
+      "id": "vision_runtime",
+      "type": "backend",
+      "label": "视觉推理运行时",
+      "sublabel": "检测 · 跟踪 · TensorRT",
+      "pos": [600, 230],
+      "size": [170, 74]
+    },
+    {
+      "id": "behavior_engine",
+      "type": "backend",
+      "label": "行为状态引擎",
+      "sublabel": "时序窗口 · 置信度 · 防抖",
+      "pos": [800, 230],
+      "size": [178, 74]
+    },
+    {
+      "id": "event_bus",
+      "type": "messagebus",
+      "label": "状态事件总线",
+      "sublabel": "resting · active · absent",
+      "pos": [1008, 230],
+      "size": [178, 74]
+    },
+    {
+      "id": "timeline_store",
+      "type": "database",
+      "label": "本地时间线",
+      "sublabel": "状态区间 · 证据 · 指标",
+      "pos": [1008, 418],
+      "size": [178, 74]
+    },
+    {
+      "id": "sync_api",
+      "type": "security",
+      "label": "同步与访问 API",
+      "sublabel": "鉴权 · HTTPS / WebSocket",
+      "pos": [1220, 230],
+      "size": [160, 74]
+    },
+    {
+      "id": "companion_clients",
+      "type": "frontend",
+      "label": "陪伴显示端",
+      "sublabel": "电脑桌宠 · 手机 · 手表",
+      "pos": [1220, 418],
+      "size": [160, 74]
+    },
+    {
+      "id": "model_lab",
+      "type": "backend",
+      "label": "模型实验室",
+      "sublabel": "数据 · ONNX · FP16 / INT8",
+      "pos": [600, 418],
+      "size": [170, 74]
+    },
+    {
+      "id": "observability",
+      "type": "backend",
+      "label": "Flight Recorder",
+      "sublabel": "延迟 · 丢帧 · 功耗 · 温度",
+      "pos": [410, 606],
+      "size": [160, 74]
+    },
+    {
+      "id": "deployment_ops",
+      "type": "cloud",
+      "label": "设备部署运维",
+      "sublabel": "systemd · 容器 · OTA · 回滚",
+      "pos": [600, 606],
+      "size": [170, 74]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Jetson Orin Nano（家中边缘节点）",
+      "wraps": ["input_adapters", "video_pipeline", "vision_runtime", "behavior_engine", "event_bus", "timeline_store", "model_lab", "observability", "deployment_ops"],
+      "pad": 12
+    }
+  ],
+  "connections": [
+    {
+      "id": "camera_to_adapters",
+      "from": "camera_sources",
+      "to": "input_adapters",
+      "label": "视频流",
+      "variant": "emphasis",
+      "labelDy": 61
+    },
+    {
+      "id": "adapters_to_video",
+      "from": "input_adapters",
+      "to": "video_pipeline",
+      "label": "统一帧",
+      "labelDy": 61
+    },
+    {
+      "id": "video_to_runtime",
+      "from": "video_pipeline",
+      "to": "vision_runtime",
+      "label": "GPU 输入",
+      "labelDy": -34
+    },
+    {
+      "id": "runtime_to_behavior",
+      "from": "vision_runtime",
+      "to": "behavior_engine",
+      "label": "轨迹与动作证据",
+      "labelDy": -34
+    },
+    {
+      "id": "behavior_to_events",
+      "from": "behavior_engine",
+      "to": "event_bus",
+      "label": "状态变更",
+      "variant": "emphasis",
+      "labelDy": 61
+    },
+    {
+      "id": "events_to_timeline",
+      "from": "event_bus",
+      "to": "timeline_store",
+      "label": "持久化",
+      "labelAt": [1140, 360]
+    },
+    {
+      "id": "events_to_api",
+      "from": "event_bus",
+      "to": "sync_api",
+      "label": "实时事件",
+      "labelDy": -34
+    },
+    {
+      "id": "timeline_to_api",
+      "from": "timeline_store",
+      "to": "sync_api",
+      "label": "历史查询",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "via": [[1097, 340], [1300, 340]],
+      "labelAt": [1160, 328]
+    },
+    {
+      "id": "api_to_clients",
+      "from": "sync_api",
+      "to": "companion_clients",
+      "label": "状态与时间线",
+      "variant": "emphasis",
+      "labelAt": [1350, 360]
+    },
+    {
+      "id": "model_to_runtime",
+      "from": "model_lab",
+      "to": "vision_runtime",
+      "label": "版本化 engine",
+      "labelAt": [732, 360]
+    },
+    {
+      "id": "runtime_to_observability",
+      "from": "vision_runtime",
+      "to": "observability",
+      "label": "运行指标",
+      "labelAt": [470, 520],
+      "variant": "dashed"
+    },
+    {
+      "id": "model_to_deployment",
+      "from": "model_lab",
+      "to": "deployment_ops",
+      "label": "候选发布包",
+      "labelAt": [740, 550]
+    },
+    {
+      "id": "observability_to_deployment",
+      "from": "observability",
+      "to": "deployment_ops",
+      "label": "告警与诊断",
+      "labelAt": [620, 706]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "先完成主链路",
+      "items": ["摄像头 → TensorRT → 四态事件 → 电脑桌宠", "首版状态：休息、活动、未看到、离线"]
+    },
+    {
+      "dot": "emerald",
+      "title": "用数据证明能力",
+      "items": ["准确率、覆盖率、P95 延迟、FPS、内存与功耗", "连续运行 72 小时并验证断流恢复"]
+    },
+    {
+      "dot": "amber",
+      "title": "再扩展产品能力",
+      "items": ["进食/玩耍、多摄像头 ReID、手机与手表", "根据真实试用反馈决定优先级"]
+    }
+  ]
+}

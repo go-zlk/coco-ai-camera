@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Jetson Orin Nano 端侧视觉推理 · 总体架构",
+    "locale": "zh-CN",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    { "id": "camera", "type": "external", "label": "CSI/USB 摄像头", "sublabel": "视频源", "pos": [40, 90], "size": [120, 52] },
+    { "id": "capture", "type": "backend", "label": "采集", "sublabel": "GStreamer · NVMM", "pos": [220, 90], "size": [140, 52] },
+    { "id": "preprocess", "type": "backend", "label": "预处理", "sublabel": "letterbox · 归一化", "pos": [420, 90], "size": [120, 52] },
+    { "id": "infer", "type": "backend", "label": "TensorRT 推理", "sublabel": "FP16 / INT8 · GPU", "pos": [600, 90], "size": [140, 52] },
+    { "id": "postprocess", "type": "backend", "label": "后处理", "sublabel": "NMS", "pos": [800, 90], "size": [120, 52] },
+    { "id": "display", "type": "frontend", "label": "显示 / 输出", "sublabel": "FPS · 存视频", "pos": [980, 90], "size": [130, 52] },
+    { "id": "aistack", "type": "backend", "label": "推理运行时 + 框架", "sublabel": "ultralytics · TensorRT · CUDA", "pos": [600, 250], "size": [180, 50] },
+    { "id": "os", "type": "backend", "label": "操作系统", "sublabel": "JetPack 6 · L4T", "pos": [830, 250], "size": [140, 50] },
+    { "id": "hw", "type": "backend", "label": "Jetson Orin Nano", "sublabel": "Ampere GPU · 8GB", "pos": [1020, 250], "size": [160, 50] },
+    { "id": "monitor", "type": "backend", "label": "监控", "sublabel": "tegrastats · jtop", "pos": [1000, 370], "size": [125, 50] },
+    { "id": "power", "type": "backend", "label": "功率管理", "sublabel": "nvpmodel", "pos": [1145, 370], "size": [125, 50] }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Jetson Orin Nano · 设备端",
+      "wraps": ["capture", "preprocess", "infer", "postprocess", "display", "aistack", "os", "hw", "monitor", "power"]
+    }
+  ],
+  "connections": [
+    { "id": "cam-to-capture", "from": "camera", "to": "capture", "label": "视频流", "variant": "emphasis" },
+    { "id": "capture-to-pre", "from": "capture", "to": "preprocess", "label": "BGR 帧" },
+    { "id": "pre-to-infer", "from": "preprocess", "to": "infer", "label": "张量" },
+    { "id": "infer-to-post", "from": "infer", "to": "postprocess", "label": "特征" },
+    { "id": "post-to-display", "from": "postprocess", "to": "display", "label": "标注帧" },
+    { "id": "infer-to-aistack", "from": "infer", "to": "aistack", "label": "调用", "fromSide": "bottom", "toSide": "top", "labelDy": 24 },
+    { "id": "aistack-to-os", "from": "aistack", "to": "os" },
+    { "id": "os-to-hw", "from": "os", "to": "hw", "label": "运行", "fromSide": "right", "toSide": "left", "labelDy": -30 },
+    { "id": "monitor-to-hw", "from": "monitor", "to": "hw", "label": "采样", "variant": "dashed", "fromSide": "top", "toSide": "bottom" },
+    { "id": "power-to-hw", "from": "power", "to": "hw", "label": "三档功率", "variant": "dashed", "fromSide": "top", "toSide": "bottom" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "数据流", "items": ["采集 → 预处理 → 推理 → 后处理 → 显示", "三段计时 t_capture / t_infer / t_draw"] },
+    { "dot": "emerald", "title": "推理栈", "items": ["ultralytics → TensorRT/CUDA → JetPack → Orin Nano", "trtexec 出 H2D / compute / D2H 精细延迟"] },
+    { "dot": "amber", "title": "资源约束", "items": ["8GB 共享内存", "nvpmodel 三档功率 + tegrastats 监控"] }
+  ]
+}

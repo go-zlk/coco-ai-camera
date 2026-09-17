@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {"title": "单猫桌宠 · MVP 软件实现架构（规划）", "locale": "zh-CN", "quality_profile": "showcase", "viewBox": [1120, 690]},
+  "components": [
+    {"id":"source","type":"external","label":"摄像头 / 视频回放","sublabel":"一套输入接口","pos":[50,110],"size":[210,80]},
+    {"id":"worker","type":"backend","label":"视觉子进程","sublabel":"采集线程 → 最新帧 → 检测","pos":[450,110],"size":[210,80]},
+    {"id":"state","type":"backend","label":"状态协调器","sublabel":"主进程 · 时序规则 / 健康状态","pos":[850,110],"size":[210,80]},
+    {"id":"store","type":"database","label":"SQLite 时间线","sublabel":"单写入者 · 区间 / 事件 / 水位","pos":[850,470],"size":[210,80]},
+    {"id":"api","type":"backend","label":"HTTP / WebSocket","sublabel":"同一主进程 · 快照 / 日报 / 心跳","pos":[450,470],"size":[210,80]},
+    {"id":"web","type":"frontend","label":"网页桌宠","sublabel":"浏览器 · 动画 / 当天时间线","pos":[50,470],"size":[210,80]}
+  ],
+  "connections": [
+    {"from":"source","to":"worker","label":"视频帧"},
+    {"from":"worker","to":"state","label":"有界 IPC · 观察结果"},
+    {"from":"state","to":"store","label":"事务提交","labelAt":[995,270]},
+    {"from":"store","to":"api","label":"已提交快照 / 区间"},
+    {"from":"api","to":"web","label":"HTTP / WebSocket","variant":"emphasis"}
+  ],
+  "cards": [
+    {"dot":"cyan","title":"一台板子，一套服务","items":["systemd 管理主进程及子进程","网页静态资源由同一服务提供"]},
+    {"dot":"emerald","title":"业务逻辑可独立测试","items":["模拟观察 / 录制视频 / 摄像头","共用状态规则与持久化接口"]},
+    {"dot":"amber","title":"故障不会伪装成猫状态","items":["采集与推理分别监测新鲜度","服务失联由浏览器标记过期"]}
+  ]
+}

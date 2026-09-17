@@ -1,0 +1,12 @@
+diagram_type: architecture
+output: /Users/zhangliangkun/code/jetson-edge-vision/docs/diagrams/pet-edge-ai-architecture.html
+specification_sha256: e7256ad1509322793603736e49b142d89bfbb8327c9ff69ec2ff7203c1e41275
+artifact_sha256: e362584b0ffbf36d1189525182aef032c83da0c199c3e884d279c173e01b38f2
+validation: 9/9 showcase, 0 errors, 0 warnings
+browser_evidence: passed
+visual_review: passed
+correction_rounds: 0
+
+Browser evidence: pet-edge-ai-architecture.visual-check.json. Latest run exited 0; an initial sandboxed Chrome launch failed and was retried with approved execution access.
+Perceptual review: inspected four screenshots, light and dark at 1440x900 and 2048x1320. Nodes, labels, routes and conclusion cards remain contained with no visible clipping. Small secondary text benefits from viewer zoom. This review covers screenshot composition, not exhaustive interactive control or export testing.
+Scope: proposed architecture, not proof of implementation or physical Jetson validation. Deployment boundaries and incremental implementation are explained in ../jetson-pet-app-implementation-plan.md.

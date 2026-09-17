@@ -1,0 +1,12 @@
+diagram_type: architecture
+output: /Users/zhangliangkun/code/jetson-edge-vision/docs/diagrams/mvp-software-architecture.html
+specification_sha256: 70e20f2ebff2d52a49c5249d14f2226982d4921615672e57a78643135a26ca6e
+artifact_sha256: 943e9f3d8d017707105eb1e257eea5e6fcef7adf0b98748dfdf6b26a16d01628
+validation: 9/9 showcase, 0 errors, 0 warnings
+browser_evidence: passed
+visual_review: passed
+correction_rounds: 1
+
+Latest visual-check exited 0 and is bound to the artifact hash above.
+Four viewport containment checks passed. Reviewed light and dark screenshots at 1440x900 and 2048x1320 after one vertical-spacing correction. Labels and nodes are visible without clipping or crossings.
+Screenshot review does not claim exhaustive interactive/export testing or hardware validation. This is a proposed implementation architecture.

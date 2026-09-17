@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "端侧 AI 视觉产品 · 进程级架构（设备端 9 服务）",
+    "locale": "zh-CN",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    { "id": "camera", "type": "external", "label": "CSI/USB 摄像头", "sublabel": "视频源", "pos": [40, 90], "size": [120, 52] },
+    { "id": "edge-vision", "type": "backend", "label": "edge-vision", "sublabel": "采集 · 推理 · 后处理", "pos": [240, 90], "size": [150, 52] },
+    { "id": "edge-stream", "type": "backend", "label": "edge-stream", "sublabel": "预览 · 录像 NVENC", "pos": [470, 90], "size": [140, 52] },
+    { "id": "client", "type": "external", "label": "客户端", "sublabel": "App · Web", "pos": [690, 90], "size": [120, 52] },
+    { "id": "cloud", "type": "cloud", "label": "云端", "sublabel": "控制面 · 数据面", "pos": [880, 90], "size": [140, 52] },
+    { "id": "edge-config", "type": "backend", "label": "edge-config", "sublabel": "配置下发", "pos": [180, 250], "size": [130, 50] },
+    { "id": "edge-ota", "type": "backend", "label": "edge-ota", "sublabel": "固件 · 模型", "pos": [420, 250], "size": [130, 50] },
+    { "id": "edge-telemetry", "type": "backend", "label": "edge-telemetry", "sublabel": "指标 · 事件", "pos": [560, 250], "size": [150, 50] },
+    { "id": "edge-sync", "type": "backend", "label": "edge-sync", "sublabel": "录像同步", "pos": [740, 250], "size": [130, 50] },
+    { "id": "edge-monitor", "type": "backend", "label": "edge-monitor", "sublabel": "看护 · 自愈", "pos": [240, 410], "size": [140, 50] },
+    { "id": "edge-power", "type": "backend", "label": "edge-power", "sublabel": "功率 · 调频", "pos": [430, 410], "size": [140, 50] },
+    { "id": "edge-identity", "type": "backend", "label": "edge-identity", "sublabel": "身份 · 安全", "pos": [620, 410], "size": [140, 50] }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Jetson Orin Nano · 设备端",
+      "wraps": ["edge-vision", "edge-stream", "edge-config", "edge-ota", "edge-telemetry", "edge-sync", "edge-monitor", "edge-power", "edge-identity"]
+    }
+  ],
+  "connections": [
+    { "id": "cam-to-vision", "from": "camera", "to": "edge-vision", "label": "视频流", "variant": "emphasis" },
+    { "id": "vision-to-stream", "from": "edge-vision", "to": "edge-stream", "label": "标注帧" },
+    { "id": "stream-to-client", "from": "edge-stream", "to": "client", "label": "预览 · 录像" },
+    { "id": "config-to-vision", "from": "edge-config", "to": "edge-vision", "label": "热加载", "fromSide": "top", "toSide": "bottom", "via": [[245, 190], [315, 190]] },
+    { "id": "vision-to-telemetry", "from": "edge-vision", "to": "edge-telemetry", "label": "业务指标", "fromSide": "right", "toSide": "top", "via": [[450, 116], [450, 220], [635, 220]] },
+    { "id": "telemetry-to-cloud", "from": "edge-telemetry", "to": "cloud", "label": "指标 · 事件", "fromSide": "right", "toSide": "bottom", "via": [[730, 275], [730, 180], [950, 180]] }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "数据面", "items": ["摄像头 → edge-vision → edge-stream → 客户端", "NVMM 帧全程零拷贝，三段计时 t_capture / t_infer / t_draw"] },
+    { "dot": "emerald", "title": "控制 · 遥测 · 同步", "items": ["云端下发配置 → edge-config 热加载到 edge-vision", "业务指标/事件 → edge-telemetry → 云端", "录像经 edge-sync 上传，固件/模型经 edge-ota 下发"] },
+    { "dot": "amber", "title": "横切", "items": ["edge-monitor 看护所有进程", "edge-power 功率调频", "edge-identity mTLS 身份安全"] }
+  ]
+}

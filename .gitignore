@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+*.pt
+*.onnx
+*.engine
+*.mp4
+docs/demo.gif
+output/

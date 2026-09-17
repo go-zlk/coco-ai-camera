@@ -1,0 +1,88 @@
+# Edge Vision on Jetson Orin Nano
+
+> 端侧视觉推理的工程化实践：把一个「跑不动」的检测模型，通过量化 + TensorRT + 功率调优，在 8GB 共享内存的边缘设备上做到实时，并给出**延迟 / 吞吐 / 内存 / 功耗 / 精度损失**五项实测数据。
+
+<!-- 放一张 30 秒 demo GIF（实时检测画面 + FPS 角标 + 边跑边滚 jtop 功耗） -->
+![demo](docs/demo.gif)
+
+---
+
+## 一句话价值
+
+> 我不只是「下载模型跑一遍」，而是把它当作一次**资源受限设备上的系统优化**：三段延迟拆开计时、三档量化对比、三档功率模式实测。这正是无人机 / 相机 / 智能硬件设备端最需要的工程能力。
+
+## 为什么这么做（面试 3 分钟讲稿内核）
+
+Jetson Orin Nano 只有 **8GB 共享内存**，CPU/GPU 抢同一块内存，功耗墙和内存墙同时存在。FP32 的 YOLO 模型直接跑，帧率和功耗都不达标。我做了四件事，每一步都留下数据：
+
+1. **量化**：FP32 → FP16 → INT8，记录精度损失，找到「速度/功耗」和「精度」的平衡点。
+2. **TensorRT**：ONNX → engine，用 `trtexec` 拿到 H2D / GPU compute / D2H 三段精细延迟。
+3. **功率调优**：`nvpmodel` 三档功率模式 + `jetson_clocks`，实测「降档」是否划算。
+4. **端到端闭环**：摄像头采集 → 推理 → 显示，用 Python 循环测真实 FPS（而非只看单帧延迟）。
+
+## 量化对比（待实测填写）
+
+> 用 `python infer.py --mode bench` + `scripts/power.sh` 跑出来，把 `__` 换成真实数字。
+
+| 指标 | FP32 (ONNX) | FP16 (TensorRT) | INT8 (TensorRT) |
+|---|---|---|---|
+| 单帧推理延迟 GPU (ms) | `__` | `__` | `__` |
+| 端到端吞吐 (FPS) | `__` | `__` | `__` |
+| 峰值内存 (MB) | `__` | `__` | `__` |
+| 整机功耗 (W) | `__` | `__` | `__` |
+| mAP50 / 精度损失 | 基准 | `__` | `__` |
+
+**结论一句话（填完数字后写）**：例如「INT8 比 FP32 快 `__` 倍、功耗降 `__`%、精度仅掉 `__`%，在 8GB 内可同时跑 `__` 路流」。
+
+## 环境
+
+- Jetson Orin Nano (8GB) + JetPack 6
+- Python 3.10+，CUDA / TensorRT 随 JetPack 自带
+
+```bash
+pip install ultralytics opencv-python
+sudo nvpmodel -m 0 && sudo jetson_clocks   # 先锁最高性能档
+```
+
+## 快速开始
+
+```bash
+# 1. 先跑通（PyTorch 权重，不依赖 engine）
+python infer.py --source 0 --model yolov8n.pt --mode live
+
+# 2. 构建 TensorRT engine 并拿到精细延迟（见 scripts/build_engine.sh）
+./scripts/build_engine.sh yolov8n
+
+# 3. 用 engine 跑实时
+python infer.py --source 0 --model yolov8n_fp16.engine --mode live --save docs/demo.mp4
+
+# 4. 跑基准，出对比表
+python infer.py --source test.mp4 --model yolov8n_fp16.engine --mode bench --iters 200
+```
+
+- `--source`：`0` = USB 摄像头，`csi` = Jetson CSI 摄像头，或视频文件路径
+- `--mode`：`live`（实时 + FPS 角标 + 可选存视频）/ `bench`（固定帧数出均值/中位数/p95）
+
+## 项目结构
+
+```
+.
+├── infer.py                 # 推理脚本：live / bench 两种模式
+├── scripts/
+│   ├── build_engine.sh      # ONNX 导出 + trtexec 量化 + 精细延迟
+│   └── power.sh             # 功率模式切换 + tegrastats 功耗采样
+├── README.md
+└── PLAN.md                  # 2 周里程碑
+```
+
+## 分工说明（数字从哪来）
+
+- **精细 GPU 延迟（H2D / compute / D2H）**：来自 `trtexec --avgRuns=200`，这是「单帧延迟」那一行的权威来源。
+- **端到端 FPS**：来自 `infer.py --mode bench`，测的是「采集 + 推理(含前后处理) + 绘制」的真实闭环吞吐，代表实际产品体验。
+- **功耗 / 内存**：来自 `scripts/power.sh`（`tegrastats` 每秒采样），推理全程取峰值/均值。
+
+## Roadmap
+
+- [ ] INT8 校准（当前 `build_engine.sh` 先只做 FP16）
+- [ ] DeepStream 多路视频流（相机/安防行业硬通货）
+- [ ] 一个端侧 LLM（Qwen2.5-3B / Llama-3.2-3B 4-bit）作为第二张牌
