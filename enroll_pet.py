@@ -9,6 +9,7 @@ small representative gallery for later embedding extraction.
 from __future__ import annotations
 
 import argparse
+import json
 import time
 from pathlib import Path
 
@@ -26,7 +27,8 @@ def crop_signature(crop: np.ndarray) -> np.ndarray:
 
 
 def capture(name: str, model_path: str, source: str, output: Path,
-            duration: float, conf: float, max_samples: int) -> int:
+            duration: float, conf: float, max_samples: int,
+            held_seconds: float) -> int:
     model = YOLO(model_path)
     cap = open_capture(source)
     if not cap.isOpened():
@@ -35,13 +37,23 @@ def capture(name: str, model_path: str, source: str, output: Path,
     target = output / name
     target.mkdir(parents=True, exist_ok=True)
     signatures: list[np.ndarray] = []
+    manifest: list[dict[str, object]] = []
     saved = 0
     started = time.monotonic()
     frame_index = 0
-    print(f"[enroll] 正在采集 {name}，请让猫自然活动 {duration:.0f} 秒...")
+    free_prompted = held_seconds <= 0
+    free_seconds = max(0.0, duration - held_seconds)
+    if held_seconds > 0:
+        print(f"[enroll] 前 {held_seconds:.0f} 秒可抱着 {name} 在镜头前自然转动")
+    if free_seconds > 0:
+        print(f"[enroll] 随后请放下猫，让它自然活动 {free_seconds:.0f} 秒")
 
     try:
         while time.monotonic() - started < duration and saved < max_samples:
+            elapsed = time.monotonic() - started
+            if not free_prompted and elapsed >= held_seconds:
+                print("[enroll] 现在请放下猫，继续让它自然活动")
+                free_prompted = True
             ok, frame = cap.read()
             if not ok:
                 print("[enroll] 摄像头读取失败，停止采集")
@@ -75,10 +87,22 @@ def capture(name: str, model_path: str, source: str, output: Path,
             path = target / f"sample_{saved + 1:03d}.jpg"
             cv2.imwrite(str(path), crop, [cv2.IMWRITE_JPEG_QUALITY, 92])
             signatures.append(signature)
+            elapsed = time.monotonic() - started
+            manifest.append({
+                "file": path.name,
+                "phase": "held" if elapsed < held_seconds else "free",
+                "confidence": round(float(score), 4),
+                "area_ratio": round(quality.area_ratio, 5),
+                "sharpness": round(quality.sharpness, 2),
+            })
             saved += 1
             print(f"[enroll] {saved:02d}/{max_samples} 置信度={score:.2f} 清晰度={quality.sharpness:.0f}")
     finally:
         cap.release()
+
+    (target / "manifest.json").write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
 
     print(f"[enroll] 完成：保存 {saved} 张样本到 {target}")
     if saved < 8:
@@ -93,11 +117,13 @@ def main() -> None:
     parser.add_argument("--source", default="csi")
     parser.add_argument("--output", default="data/enrollment")
     parser.add_argument("--duration", type=float, default=30.0)
+    parser.add_argument("--held-seconds", type=float, default=10.0,
+                        help="前多少秒允许抱着猫采集补充样本（默认 10）")
     parser.add_argument("--conf", type=float, default=0.20)
     parser.add_argument("--max-samples", type=int, default=24)
     args = parser.parse_args()
     capture(args.name, args.model, args.source, Path(args.output),
-            args.duration, args.conf, args.max_samples)
+            args.duration, args.conf, args.max_samples, args.held_seconds)
 
 
 if __name__ == "__main__":
