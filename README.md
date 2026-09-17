@@ -60,7 +60,11 @@ python enroll_pet.py --name coco --model yolov8n.pt --source csi
 # 1d. 建立 Coco/Kui gallery，并在实时画面中匹配身份
 python build_gallery.py --root data/enrollment --output data/gallery.json
 python infer.py --source csi --model yolov8n.pt --mode live \
-  --cat-only --track --gallery data/gallery.json --identity-threshold 0.55
+  --cat-only --track --gallery data/gallery.json --identity-threshold 0.55 \
+  --db data/home_memory.db
+
+# 在另一个终端启动查询服务（API 不会自行采集画面）
+python memory_api.py --db data/home_memory.db --host 0.0.0.0 --port 8080
 
 # 2. 构建 TensorRT engine 并拿到精细延迟（见 scripts/build_engine.sh）
 ./scripts/build_engine.sh yolov8n
@@ -80,6 +84,7 @@ python infer.py --source test.mp4 --model yolov8n_fp16.engine --mode bench --ite
 - 实时身份标签带轨迹级投票和切换滞后，减少抱猫或遮挡时 Coco/Kui 来回跳变
 - `memory_store.py`：本地 SQLite WAL 事件记忆层，保存实体、观测和可查询时间线
 - `memory_api.py`：提供 `/api/status`、`/api/timeline`、`/api/entities` 查询接口
+- `data/home_memory.db`：第一次带 `--db` 启动推理或 API 时创建；从工程目录运行，避免相对路径落在其他位置
 
 ## 项目结构
 
