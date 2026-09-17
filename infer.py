@@ -36,6 +36,7 @@ from state_estimator import CatState, CatStateEstimator
 from appearance_embedding import extract_embedding
 from identity_matcher import GalleryMatcher
 from identity_stabilizer import IdentityStabilizer
+from memory_store import MemoryStore
 
 
 def open_capture(source: str) -> cv2.VideoCapture:
@@ -61,12 +62,14 @@ def run_live(model: YOLO, cap: cv2.VideoCapture, conf: float, imgsz: int,
              save_path: str | None, cat_only: bool = False,
              tracking: bool = False,
              tracker: str = "trackers/bytetrack-cat.yaml",
-             gallery: GalleryMatcher | None = None) -> None:
+             gallery: GalleryMatcher | None = None,
+             memory: MemoryStore | None = None) -> None:
     """实时演示：采集→推理→绘制 三段计时 + FPS 角标，按 q 退出。"""
     fps_win: deque[float] = deque(maxlen=30)  # 30 帧滑窗，FPS 更稳
     writer = None
     cat_state = CatStateEstimator()
     identity_stabilizer = IdentityStabilizer()
+    last_memory_state: tuple[str | None, str] | None = None
     if save_path:
         writer = cv2.VideoWriter(
             save_path, cv2.VideoWriter_fourcc(*"mp4v"), 30.0, (1280, 720)
@@ -127,6 +130,21 @@ def run_live(model: YOLO, cap: cv2.VideoCapture, conf: float, imgsz: int,
         else:
             state = cat_state.mark_absent()
             identity_label, identity_score = "unknown", 0.0
+
+        if memory is not None:
+            memory_state = (None if identity_label == "unknown" else identity_label,
+                            state.value)
+            if memory_state != last_memory_state:
+                entity_id = memory_state[0]
+                if entity_id is not None:
+                    memory.upsert_entity(entity_id, "cat", entity_id.title())
+                memory.record_observation(entity_id=entity_id, state=state.value,
+                                          confidence=float(identity_score or 0.0),
+                                          track_id=0, model_version="yolov8")
+                memory.record_event(event_type="state_changed", subject_id=entity_id,
+                                    place_id="camera_0", confidence=float(identity_score or 0.0),
+                                    metadata={"state": state.value, "identity": entity_id})
+                last_memory_state = memory_state
 
         annotated = results.plot()
         t3 = time.perf_counter()
@@ -234,6 +252,8 @@ def main() -> None:
                     help="身份 gallery JSON（由 build_gallery.py 生成）")
     ap.add_argument("--identity-threshold", type=float, default=0.55,
                     help="身份相似度阈值；先用 0.55，再按诊断分数调整")
+    ap.add_argument("--db", default=None,
+                    help="启用本地 Home Memory 事件记录，例如 data/home_memory.db")
     args = ap.parse_args()
 
     model = YOLO(args.model)
@@ -245,13 +265,16 @@ def main() -> None:
                if args.gallery else None)
     if gallery is not None:
         print(f"[identity] loaded {gallery.identity_count} identities, threshold={args.identity_threshold:.2f}")
+    memory = MemoryStore(args.db) if args.db else None
     if args.mode == "live":
         run_live(model, cap, args.conf, args.imgsz, args.save,
-                 args.cat_only, args.track, args.tracker, gallery)
+                 args.cat_only, args.track, args.tracker, gallery, memory)
     else:
         run_bench(model, cap, args.conf, args.imgsz, args.iters)
 
     cap.release()
+    if memory is not None:
+        memory.close()
 
 
 if __name__ == "__main__":

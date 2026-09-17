@@ -79,6 +79,7 @@ python infer.py --source test.mp4 --model yolov8n_fp16.engine --mode bench --ite
 - `build_gallery.py`：从注册样本建立本地身份 gallery；实时匹配失败时显示 `unknown`
 - 实时身份标签带轨迹级投票和切换滞后，减少抱猫或遮挡时 Coco/Kui 来回跳变
 - `memory_store.py`：本地 SQLite WAL 事件记忆层，保存实体、观测和可查询时间线
+- `memory_api.py`：提供 `/api/status`、`/api/timeline`、`/api/entities` 查询接口
 
 ## 项目结构
 
