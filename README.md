@@ -60,7 +60,7 @@ python enroll_pet.py --name coco --model yolov8n.pt --source csi
 # 1d. 建立 Coco/Kui gallery，并在实时画面中匹配身份
 python build_gallery.py --root data/enrollment --output data/gallery.json
 python infer.py --source csi --model yolov8n.pt --mode live \
-  --cat-only --track --gallery data/gallery.json
+  --cat-only --track --gallery data/gallery.json --identity-threshold 0.55
 
 # 2. 构建 TensorRT engine 并拿到精细延迟（见 scripts/build_engine.sh）
 ./scripts/build_engine.sh yolov8n

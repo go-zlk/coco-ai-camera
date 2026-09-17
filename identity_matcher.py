@@ -9,10 +9,14 @@ from appearance_embedding import cosine_similarity
 
 
 class GalleryMatcher:
-    def __init__(self, gallery_path: str | Path, threshold: float = 0.78) -> None:
+    def __init__(self, gallery_path: str | Path, threshold: float = 0.55) -> None:
         data = json.loads(Path(gallery_path).read_text(encoding="utf-8"))
         self.profiles = data.get("profiles", [])
         self.threshold = threshold
+
+    @property
+    def identity_count(self) -> int:
+        return len(self.profiles)
 
     def match(self, embedding: list[float]) -> tuple[str | None, float]:
         best_name, best_score = None, -1.0

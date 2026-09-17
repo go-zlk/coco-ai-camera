@@ -222,7 +222,8 @@ def main() -> None:
                     help="跟踪器 YAML 配置路径")
     ap.add_argument("--gallery", default=None,
                     help="身份 gallery JSON（由 build_gallery.py 生成）")
-    ap.add_argument("--identity-threshold", type=float, default=0.78)
+    ap.add_argument("--identity-threshold", type=float, default=0.55,
+                    help="身份相似度阈值；先用 0.55，再按诊断分数调整")
     args = ap.parse_args()
 
     model = YOLO(args.model)
@@ -232,6 +233,8 @@ def main() -> None:
 
     gallery = (GalleryMatcher(args.gallery, args.identity_threshold)
                if args.gallery else None)
+    if gallery is not None:
+        print(f"[identity] loaded {gallery.identity_count} identities, threshold={args.identity_threshold:.2f}")
     if args.mode == "live":
         run_live(model, cap, args.conf, args.imgsz, args.save,
                  args.cat_only, args.track, args.tracker, gallery)
