@@ -50,6 +50,10 @@ sudo nvpmodel -m 0 && sudo jetson_clocks   # 先锁最高性能档
 # 1. 先跑通（PyTorch 权重，不依赖 engine）
 python infer.py --source 0 --model yolov8n.pt --mode live
 
+# 1b. 猫咪场景：ByteTrack 保持短时遮挡时的目标轨迹
+python infer.py --source csi --model yolov8n.pt --mode live \
+  --cat-only --track --imgsz 960 --conf 0.15
+
 # 2. 构建 TensorRT engine 并拿到精细延迟（见 scripts/build_engine.sh）
 ./scripts/build_engine.sh yolov8n
 
@@ -62,6 +66,7 @@ python infer.py --source test.mp4 --model yolov8n_fp16.engine --mode bench --ite
 
 - `--source`：`0` = USB 摄像头，`csi` = Jetson CSI 摄像头，或视频文件路径
 - `--mode`：`live`（实时 + FPS 角标 + 可选存视频）/ `bench`（固定帧数出均值/中位数/p95）
+- `--track`：启用 ByteTrack，缓解转身、短时遮挡造成的连续漏检；目标完全消失后仍由状态机判定为不可见
 
 ## 项目结构
 

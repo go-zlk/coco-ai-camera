@@ -55,7 +55,8 @@ def fmt_ms(x: float) -> str:
 
 
 def run_live(model: YOLO, cap: cv2.VideoCapture, conf: float, imgsz: int,
-             save_path: str | None, cat_only: bool = False) -> None:
+             save_path: str | None, cat_only: bool = False,
+             tracking: bool = False) -> None:
     """实时演示：采集→推理→绘制 三段计时 + FPS 角标，按 q 退出。"""
     fps_win: deque[float] = deque(maxlen=30)  # 30 帧滑窗，FPS 更稳
     writer = None
@@ -79,7 +80,13 @@ def run_live(model: YOLO, cap: cv2.VideoCapture, conf: float, imgsz: int,
             # COCO class 15 is cat.  Filtering before plot() prevents large
             # chair/person boxes from hiding the product state in the demo.
             infer_kwargs["classes"] = [15]
-        results = model(frame, **infer_kwargs)[0]
+        if tracking:
+            # ByteTrack keeps a short-lived identity through motion and
+            # occasional missed detections (turning/partial occlusion).
+            results = model.track(frame, persist=True, tracker="bytetrack.yaml",
+                                  **infer_kwargs)[0]
+        else:
+            results = model(frame, **infer_kwargs)[0]
         t2 = time.perf_counter()
 
         # COCO class 15 is cat.  Keep only the highest-confidence cat box
@@ -192,6 +199,8 @@ def main() -> None:
     ap.add_argument("--device", default="0", help="推理设备，Jetson 上为 0")
     ap.add_argument("--cat-only", action="store_true",
                     help="仅推理/显示 COCO cat 类别，减少无关框干扰")
+    ap.add_argument("--track", action="store_true",
+                    help="启用 ByteTrack，保持短时遮挡/漏检时的目标轨迹")
     args = ap.parse_args()
 
     model = YOLO(args.model)
@@ -200,7 +209,8 @@ def main() -> None:
         raise SystemExit(f"无法打开视频源: {args.source}")
 
     if args.mode == "live":
-        run_live(model, cap, args.conf, args.imgsz, args.save, args.cat_only)
+        run_live(model, cap, args.conf, args.imgsz, args.save,
+                 args.cat_only, args.track)
     else:
         run_bench(model, cap, args.conf, args.imgsz, args.iters)
 
