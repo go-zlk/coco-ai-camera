@@ -33,6 +33,8 @@ import cv2
 from ultralytics import YOLO
 
 from state_estimator import CatState, CatStateEstimator
+from appearance_embedding import extract_embedding
+from identity_matcher import GalleryMatcher
 
 
 def open_capture(source: str) -> cv2.VideoCapture:
@@ -57,7 +59,8 @@ def fmt_ms(x: float) -> str:
 def run_live(model: YOLO, cap: cv2.VideoCapture, conf: float, imgsz: int,
              save_path: str | None, cat_only: bool = False,
              tracking: bool = False,
-             tracker: str = "trackers/bytetrack-cat.yaml") -> None:
+             tracker: str = "trackers/bytetrack-cat.yaml",
+             gallery: GalleryMatcher | None = None) -> None:
     """实时演示：采集→推理→绘制 三段计时 + FPS 角标，按 q 退出。"""
     fps_win: deque[float] = deque(maxlen=30)  # 30 帧滑窗，FPS 更稳
     writer = None
@@ -102,8 +105,18 @@ def run_live(model: YOLO, cap: cv2.VideoCapture, conf: float, imgsz: int,
         if cat_boxes:
             score, box = max(cat_boxes)
             state = cat_state.update(box, score, frame.shape[1], frame.shape[0])
+            identity_label = "unknown"
+            identity_score = 0.0
+            if gallery is not None:
+                x1, y1, x2, y2 = [max(0, int(v)) for v in box]
+                crop = frame[min(y1, frame.shape[0]):min(y2, frame.shape[0]),
+                             min(x1, frame.shape[1]):min(x2, frame.shape[1])]
+                if crop.size:
+                    identity, identity_score = gallery.match(extract_embedding(crop))
+                    identity_label = identity or "unknown"
         else:
             state = cat_state.mark_absent()
+            identity_label, identity_score = "unknown", 0.0
 
         annotated = results.plot()
         t3 = time.perf_counter()
@@ -123,6 +136,9 @@ def run_live(model: YOLO, cap: cv2.VideoCapture, conf: float, imgsz: int,
                     cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 0), 1)
         cv2.putText(annotated, f"cat {state.value}", (16, 112),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 220, 255), 2)
+        if cat_boxes:
+            cv2.putText(annotated, f"id {identity_label} {identity_score:.2f}", (16, 144),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.65, (255, 210, 0), 2)
 
         cv2.imshow("edge-vision", annotated)
         if writer is not None:
@@ -204,6 +220,9 @@ def main() -> None:
                     help="启用 ByteTrack，保持短时遮挡/漏检时的目标轨迹")
     ap.add_argument("--tracker", default="trackers/bytetrack-cat.yaml",
                     help="跟踪器 YAML 配置路径")
+    ap.add_argument("--gallery", default=None,
+                    help="身份 gallery JSON（由 build_gallery.py 生成）")
+    ap.add_argument("--identity-threshold", type=float, default=0.78)
     args = ap.parse_args()
 
     model = YOLO(args.model)
@@ -211,9 +230,11 @@ def main() -> None:
     if not cap.isOpened():
         raise SystemExit(f"无法打开视频源: {args.source}")
 
+    gallery = (GalleryMatcher(args.gallery, args.identity_threshold)
+               if args.gallery else None)
     if args.mode == "live":
         run_live(model, cap, args.conf, args.imgsz, args.save,
-                 args.cat_only, args.track, args.tracker)
+                 args.cat_only, args.track, args.tracker, gallery)
     else:
         run_bench(model, cap, args.conf, args.imgsz, args.iters)
 

@@ -1,0 +1,26 @@
+"""Runtime matching against the local appearance gallery."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from appearance_embedding import cosine_similarity
+
+
+class GalleryMatcher:
+    def __init__(self, gallery_path: str | Path, threshold: float = 0.78) -> None:
+        data = json.loads(Path(gallery_path).read_text(encoding="utf-8"))
+        self.profiles = data.get("profiles", [])
+        self.threshold = threshold
+
+    def match(self, embedding: list[float]) -> tuple[str | None, float]:
+        best_name, best_score = None, -1.0
+        for profile in self.profiles:
+            for sample in profile.get("samples", []):
+                score = cosine_similarity(embedding, sample["embedding"])
+                if score > best_score:
+                    best_name, best_score = profile["identity"], score
+        if best_score < self.threshold:
+            return None, best_score
+        return best_name, best_score

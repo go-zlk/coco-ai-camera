@@ -57,6 +57,11 @@ python infer.py --source csi --model yolov8n.pt --mode live \
 # 1c. 自动采集宠物身份样本（每只猫只需运行一次）
 python enroll_pet.py --name coco --model yolov8n.pt --source csi
 
+# 1d. 建立 Coco/Kui gallery，并在实时画面中匹配身份
+python build_gallery.py --root data/enrollment --output data/gallery.json
+python infer.py --source csi --model yolov8n.pt --mode live \
+  --cat-only --track --gallery data/gallery.json
+
 # 2. 构建 TensorRT engine 并拿到精细延迟（见 scripts/build_engine.sh）
 ./scripts/build_engine.sh yolov8n
 
@@ -71,6 +76,7 @@ python infer.py --source test.mp4 --model yolov8n_fp16.engine --mode bench --ite
 - `--mode`：`live`（实时 + FPS 角标 + 可选存视频）/ `bench`（固定帧数出均值/中位数/p95）
 - `--track`：启用 ByteTrack，缓解转身、短时遮挡造成的连续漏检；目标完全消失后仍由状态机判定为不可见
 - `enroll_pet.py`：自动检测、筛选、去重并保存宠物注册样本，不需要逐张拍照
+- `build_gallery.py`：从注册样本建立本地身份 gallery；实时匹配失败时显示 `unknown`
 
 ## 项目结构
 
