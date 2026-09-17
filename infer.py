@@ -56,7 +56,8 @@ def fmt_ms(x: float) -> str:
 
 def run_live(model: YOLO, cap: cv2.VideoCapture, conf: float, imgsz: int,
              save_path: str | None, cat_only: bool = False,
-             tracking: bool = False) -> None:
+             tracking: bool = False,
+             tracker: str = "trackers/bytetrack-cat.yaml") -> None:
     """实时演示：采集→推理→绘制 三段计时 + FPS 角标，按 q 退出。"""
     fps_win: deque[float] = deque(maxlen=30)  # 30 帧滑窗，FPS 更稳
     writer = None
@@ -83,7 +84,7 @@ def run_live(model: YOLO, cap: cv2.VideoCapture, conf: float, imgsz: int,
         if tracking:
             # ByteTrack keeps a short-lived identity through motion and
             # occasional missed detections (turning/partial occlusion).
-            results = model.track(frame, persist=True, tracker="bytetrack.yaml",
+            results = model.track(frame, persist=True, tracker=tracker,
                                   **infer_kwargs)[0]
         else:
             results = model(frame, **infer_kwargs)[0]
@@ -201,6 +202,8 @@ def main() -> None:
                     help="仅推理/显示 COCO cat 类别，减少无关框干扰")
     ap.add_argument("--track", action="store_true",
                     help="启用 ByteTrack，保持短时遮挡/漏检时的目标轨迹")
+    ap.add_argument("--tracker", default="trackers/bytetrack-cat.yaml",
+                    help="跟踪器 YAML 配置路径")
     args = ap.parse_args()
 
     model = YOLO(args.model)
@@ -210,7 +213,7 @@ def main() -> None:
 
     if args.mode == "live":
         run_live(model, cap, args.conf, args.imgsz, args.save,
-                 args.cat_only, args.track)
+                 args.cat_only, args.track, args.tracker)
     else:
         run_bench(model, cap, args.conf, args.imgsz, args.iters)
 
