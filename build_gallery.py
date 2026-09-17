@@ -16,10 +16,19 @@ def build(root: Path, output: Path) -> int:
     profiles: list[dict[str, object]] = []
     for identity_dir in sorted(p for p in root.iterdir() if p.is_dir()):
         samples = []
+        manifest = {}
+        manifest_path = identity_dir / "manifest.json"
+        if manifest_path.exists():
+            manifest = {item["file"]: item for item in
+                        json.loads(manifest_path.read_text(encoding="utf-8"))}
         for path in sorted(identity_dir.glob("sample_*.jpg")):
             image = cv2.imread(str(path))
             if image is not None:
-                samples.append({"file": path.name, "embedding": extract_embedding(image)})
+                phase = manifest.get(path.name, {}).get("phase", "free")
+                weight = 0.70 if phase == "held" else 1.0
+                samples.append({"file": path.name, "phase": phase,
+                                "weight": weight,
+                                "embedding": extract_embedding(image)})
         if samples:
             profiles.append({"identity": identity_dir.name, "samples": samples})
     output.parent.mkdir(parents=True, exist_ok=True)

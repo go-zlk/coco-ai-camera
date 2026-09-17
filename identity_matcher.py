@@ -23,8 +23,12 @@ class GalleryMatcher:
         for profile in self.profiles:
             for sample in profile.get("samples", []):
                 score = cosine_similarity(embedding, sample["embedding"])
-                if score > best_score:
-                    best_name, best_score = profile["identity"], score
+                # Held samples are useful, but their arm/clothing context is
+                # less representative than free-motion samples.
+                weight = float(sample.get("weight", 1.0))
+                effective_score = score - (1.0 - weight) * 0.05
+                if effective_score > best_score:
+                    best_name, best_score = profile["identity"], effective_score
         if best_score < self.threshold:
             return None, best_score
         return best_name, best_score
