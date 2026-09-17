@@ -35,6 +35,7 @@ from ultralytics import YOLO
 from state_estimator import CatState, CatStateEstimator
 from appearance_embedding import extract_embedding
 from identity_matcher import GalleryMatcher
+from identity_stabilizer import IdentityStabilizer
 
 
 def open_capture(source: str) -> cv2.VideoCapture:
@@ -65,6 +66,7 @@ def run_live(model: YOLO, cap: cv2.VideoCapture, conf: float, imgsz: int,
     fps_win: deque[float] = deque(maxlen=30)  # 30 帧滑窗，FPS 更稳
     writer = None
     cat_state = CatStateEstimator()
+    identity_stabilizer = IdentityStabilizer()
     if save_path:
         writer = cv2.VideoWriter(
             save_path, cv2.VideoWriter_fourcc(*"mp4v"), 30.0, (1280, 720)
@@ -114,6 +116,14 @@ def run_live(model: YOLO, cap: cv2.VideoCapture, conf: float, imgsz: int,
                 if crop.size:
                     identity, identity_score = gallery.match(extract_embedding(crop))
                     identity_label = identity or "unknown"
+                    track_id = 0
+                    if results.boxes.id is not None and len(results.boxes.id):
+                        track_id = int(results.boxes.id[0].item())
+                    stable = identity_stabilizer.update(
+                        track_id, identity, identity_score
+                    )
+                    if stable is not None:
+                        identity_label = stable
         else:
             state = cat_state.mark_absent()
             identity_label, identity_score = "unknown", 0.0

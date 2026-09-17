@@ -77,6 +77,7 @@ python infer.py --source test.mp4 --model yolov8n_fp16.engine --mode bench --ite
 - `--track`：启用 ByteTrack，缓解转身、短时遮挡造成的连续漏检；目标完全消失后仍由状态机判定为不可见
 - `enroll_pet.py`：自动检测、筛选、去重并保存宠物注册样本，不需要逐张拍照
 - `build_gallery.py`：从注册样本建立本地身份 gallery；实时匹配失败时显示 `unknown`
+- 实时身份标签带轨迹级投票和切换滞后，减少抱猫或遮挡时 Coco/Kui 来回跳变
 
 ## 项目结构
 
