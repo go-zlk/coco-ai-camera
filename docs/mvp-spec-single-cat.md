@@ -1,5 +1,7 @@
 # 单猫状态桌宠 MVP
 
+> 状态：历史实验。当前 MVP 已切换到桌面 Physical Context Engine，执行基线见 [文档导航](README.md)。
+
 实施入口：[软件开发指引](software-development-guide.md)、[任务与依赖清单](development-backlog.md)、[MVP 软件实现架构图](diagrams/mvp-software-architecture.html)。指引细化内部 unknown、客户端失联、崩溃恢复及两周投入假设；下文性能目标均需实测。
 
 ## 目标

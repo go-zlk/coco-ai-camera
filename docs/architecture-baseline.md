@@ -1,5 +1,7 @@
 # Jetson 家庭记忆平台：猫咪 MVP 架构基线
 
+> 状态：历史架构。当前执行架构正在迁移到 Physical Context Engine，参见 [文档导航](README.md)。
+
 版本 v0.1 · 2026-09-15
 
 这是当前工程的架构基线。长期目标是家庭记忆 AI；当前先让一台 Jetson Orin Nano 在家中观察一只猫，将“可观察状态”可靠地转换成网页桌宠和当天时间线。猫咪是第一个垂直切片，不代表最终产品边界；产品路线见 [product-direction-home-memory.md](product-direction-home-memory.md)。它是目标设计，不代表所有模块已经实现。配套图：[MVP 软件实现架构（Archify）](diagrams/mvp-software-architecture.html)。

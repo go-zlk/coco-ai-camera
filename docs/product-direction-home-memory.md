@@ -1,5 +1,7 @@
 # AI Home Memory 产品方向与演进路线
 
+> 状态：长期方向。当前 MVP 已收敛到桌面 Physical Context Engine，执行基线见 [文档导航](README.md)。
+
 ## 1. 产品定位
 
 本工程的长期目标不是再做一个普通摄像头或录像机，而是让家庭能够回答：

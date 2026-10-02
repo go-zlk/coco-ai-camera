@@ -1,113 +1,143 @@
-# Edge Vision on Jetson Orin Nano
+# Physical Context Engine on Jetson Orin Nano
 
-> 当前产品主线：为 AI 提供持续、低维、可查询现实状态的 **Physical Context Engine**。桌面工作/学习场景是第一入口，详见 [产品方向](docs/product-direction-physical-context-engine.md)。
+一个本地优先的 Physical Context Engine：持续感知用户在桌面工作/学习时的客观状态，生成带时间窗口、置信度和新鲜度的结构化 Context，供 AI 回答、总结和建议使用。
 
-> 端侧视觉推理的工程化实践：把一个「跑不动」的检测模型，通过量化 + TensorRT + 功率调优，在 8GB 共享内存的边缘设备上做到实时，并给出**延迟 / 吞吐 / 内存 / 功耗 / 精度损失**五项实测数据。
+> 产品目标：让 AI 在回答用户之前，先知道用户此刻真实处于什么状态。
 
-<!-- 放一张 30 秒 demo GIF（实时检测画面 + FPS 角标 + 边跑边滚 jtop 功耗） -->
-![demo](docs/demo.gif)
+## 当前阶段
 
----
+项目正在从摄像头/宠物感知实验迁移到桌面个人上下文 MVP。
 
-## 一句话价值
+已经验证：
 
-> 我不只是「下载模型跑一遍」，而是把它当作一次**资源受限设备上的系统优化**：三段延迟拆开计时、三档量化对比、三档功率模式实测。这正是无人机 / 相机 / 智能硬件设备端最需要的工程能力。
+- Jetson Orin Nano、JetPack 6.2.1、TensorRT 10.3。
+- CSI 摄像头通过 `nvarguscamerasrc` 稳定输出 1280×720。
+- OpenCV GStreamer、PyTorch CUDA 和 Ultralytics 推理可用。
+- YOLO 检测、ByteTrack、SQLite WAL 和本地 HTTP API 基础链路。
+- 本地 Git/GitHub 与 Jetson 自动同步开发流程。
 
-## 为什么这么做（工程方法）
+正在实现：
 
-Jetson Orin Nano 只有 **8GB 共享内存**，CPU/GPU 抢同一块内存，功耗墙和内存墙同时存在。FP32 的 YOLO 模型直接跑，帧率和功耗都不达标。我做了四件事，每一步都留下数据：
+- 单用户 Person/Pose observation。
+- presence、session、posture 和离座的时间状态。
+- `user_state.json`、Context SQLite 和 `/v1/context/*` API。
+- 两小时稳定运行和固定数据评测。
 
-1. **量化**：FP32 → FP16 → INT8，记录精度损失，找到「速度/功耗」和「精度」的平衡点。
-2. **TensorRT**：ONNX → engine，用 `trtexec` 拿到 H2D / GPU compute / D2H 三段精细延迟。
-3. **功率调优**：`nvpmodel` 三档功率模式 + `jetson_clocks`，实测「降档」是否划算。
-4. **端到端闭环**：摄像头采集 → 推理 → 显示，用 Python 循环测真实 FPS（而非只看单帧延迟）。
+尚未完成：
 
-## 量化对比（待实测填写）
+- Pose 模型的板端基准。
+- Personal Baseline。
+- Computer Activity Adapter。
+- Context + LLM 对照实验。
+- 产品级身份认证和远程访问。
 
-> 用 `python infer.py --mode bench` + `scripts/power.sh` 跑出来，把 `__` 换成真实数字。
+## 产品边界
 
-| 指标 | FP32 (ONNX) | FP16 (TensorRT) | INT8 (TensorRT) |
-|---|---|---|---|
-| 单帧推理延迟 GPU (ms) | `__` | `__` | `__` |
-| 端到端吞吐 (FPS) | `__` | `__` | `__` |
-| 峰值内存 (MB) | `__` | `__` | `__` |
-| 整机功耗 (W) | `__` | `__` | `__` |
-| mAP50 / 精度损失 | 基准 | `__` | `__` |
+Milestone 0 只处理可观察、可验证的状态：
 
-**结论一句话（填完数字后写）**：例如「INT8 比 FP32 快 `__` 倍、功耗降 `__`%、精度仅掉 `__`%，在 8GB 内可同时跑 `__` 路流」。
+- 是否在桌前。
+- 连续在座时间。
+- 明显前倾、正常或无法判断。
+- 粗粒度头部方向。
+- 离座次数和近期时间趋势。
+- 摄像头、推理和数据新鲜度。
 
-## 环境
+系统不进行疾病、心理或情绪诊断，也不宣称精确 gaze tracking。原始视频默认不保存。
 
-- Jetson Orin Nano (8GB) + JetPack 6
-- Python 3.10+，CUDA / TensorRT 随 JetPack 自带
+## 目标数据流
 
-```bash
-pip install ultralytics opencv-python
-sudo nvpmodel -m 0 && sudo jetson_clocks   # 先锁最高性能档
+```text
+CSI / RTSP Camera
+        ↓
+Capture + Person/Pose Worker
+        ↓ PoseObservation
+Temporal User State
+        ↓
+Personal Baseline
+        ↓
+SQLite + user_state.json
+        ↓
+Context API
+        ↓
+LLM / Desk Companion / Evaluation
 ```
 
-## 快速开始
+目标输出示例：
 
-```bash
-# 1. 先跑通（PyTorch 权重，不依赖 engine）
-python infer.py --source 0 --model yolov8n.pt --mode live
-
-# 1b. 猫咪场景：ByteTrack 保持短时遮挡时的目标轨迹
-python infer.py --source csi --model yolov8n.pt --mode live \
-  --cat-only --track --imgsz 960 --conf 0.15
-
-# 1c. 自动采集宠物身份样本（每只猫只需运行一次）
-python enroll_pet.py --name coco --model yolov8n.pt --source csi
-
-# 1d. 建立 Coco/Kui gallery，并在实时画面中匹配身份
-python build_gallery.py --root data/enrollment --output data/gallery.json
-python infer.py --source csi --model yolov8n.pt --mode live \
-  --cat-only --track --gallery data/gallery.json --identity-threshold 0.55 \
-  --db data/home_memory.db
-
-# 在另一个终端启动查询服务（API 不会自行采集画面）
-python memory_api.py --db data/home_memory.db --host 0.0.0.0 --port 8080
-
-# 2. 构建 TensorRT engine 并拿到精细延迟（见 scripts/build_engine.sh）
-./scripts/build_engine.sh yolov8n
-
-# 3. 用 engine 跑实时
-python infer.py --source 0 --model yolov8n_fp16.engine --mode live --save docs/demo.mp4
-
-# 4. 跑基准，出对比表
-python infer.py --source test.mp4 --model yolov8n_fp16.engine --mode bench --iters 200
+```json
+{
+  "presence": {"value": "present", "confidence": 0.96},
+  "session": {"status": "active", "continuous_seconds": 4080},
+  "posture": {"value": "forward", "confidence": 0.82},
+  "head_orientation": {"value": "screen", "confidence": 0.72},
+  "aggregates": {
+    "forward_head_ratio_20m": 0.37,
+    "left_desk_count_60m": 0
+  },
+  "source_health": "online"
+}
 ```
 
-- `--source`：`0` = USB 摄像头，`csi` = Jetson CSI 摄像头，或视频文件路径
-- `--mode`：`live`（实时 + FPS 角标 + 可选存视频）/ `bench`（固定帧数出均值/中位数/p95）
-- `--track`：启用 ByteTrack，缓解转身、短时遮挡造成的连续漏检；目标完全消失后仍由状态机判定为不可见
-- `enroll_pet.py`：自动检测、筛选、去重并保存宠物注册样本，不需要逐张拍照
-- `build_gallery.py`：从注册样本建立本地身份 gallery；实时匹配失败时显示 `unknown`
-- 实时身份标签带轨迹级投票和切换滞后，减少抱猫或遮挡时 Coco/Kui 来回跳变
-- `memory_store.py`：本地 SQLite WAL 事件记忆层，保存实体、观测和可查询时间线
-- `memory_api.py`：提供 `/api/status`、`/api/timeline`、`/api/entities` 查询接口
-- `data/home_memory.db`：第一次带 `--db` 启动推理或 API 时创建；从工程目录运行，避免相对路径落在其他位置
+## 开发方向
 
-## 项目结构
+当前任务按以下顺序执行：
 
-```
+1. Pose observation 链路。
+2. Presence 和 session 状态机。
+3. Posture 特征与时间窗口。
+4. Context Store、JSON 和 API。
+5. 状态页、标注评测和两小时稳定性。
+6. Personal Baseline。
+7. Context + LLM A/B 验证。
+
+LLM 接入排在感知正确性验证之后。
+
+## 文档
+
+- [文档导航](docs/README.md)
+- [AI Desk Companion MVP PRD](docs/product-requirements-desk-context-mvp.md)
+- [Physical Context 数据契约 v1](docs/context-contract-v1.md)
+- [Physical Context Engine 产品方向](docs/product-direction-physical-context-engine.md)
+- [当前开发任务表](docs/development-backlog.md)
+
+## 仓库结构
+
+```text
 .
-├── infer.py                 # 推理脚本：live / bench 两种模式
-├── scripts/
-│   ├── build_engine.sh      # ONNX 导出 + trtexec 量化 + 精细延迟
-│   └── power.sh             # 功率模式切换 + tegrastats 功耗采样
-├── README.md
-└── PLAN.md                  # 2 周里程碑
+├── infer.py                   # 已有检测/跟踪实验入口
+├── memory_store.py            # SQLite WAL 事件存储基础
+├── memory_api.py              # 已有本地查询 API 基础
+├── state_estimator.py         # 历史状态机实验
+├── identity_*.py              # 历史宠物身份实验
+├── enroll_pet.py              # 历史宠物注册实验
+├── trackers/                  # 跟踪器配置
+├── scripts/                   # TensorRT/功耗工具
+└── docs/                      # 当前产品文档与历史研究
 ```
 
-## 分工说明（数字从哪来）
+宠物识别、小米摄像头和 Home Memory 文档继续保留，作为长期 Home Context 的实验资产，不进入当前 MVP 关键路径。
 
-- **精细 GPU 延迟（H2D / compute / D2H）**：来自 `trtexec --avgRuns=200`，这是「单帧延迟」那一行的权威来源。
-- **端到端 FPS**：来自 `infer.py --mode bench`，测的是「采集 + 推理(含前后处理) + 绘制」的真实闭环吞吐，代表实际产品体验。
-- **功耗 / 内存**：来自 `scripts/power.sh`（`tegrastats` 每秒采样），推理全程取峰值/均值。
+## 当前开发环境
 
-## Roadmap
+板端已确认环境：
 
-- [ ] INT8 校准（当前 `build_engine.sh` 先只做 FP16）
-- [ ] DeepStream 多路视频流（相机/安防行业硬通货）
-- [ ] 一个端侧 LLM（Qwen2.5-3B / Llama-3.2-3B 4-bit）作为第二张牌
+```text
+NVIDIA Jetson Orin Nano Developer Kit
+Jetson Linux R36.4.4
+JetPack 6.2.1
+TensorRT 10.3
+Python 3.10
+OpenCV 4.8.0 with GStreamer
+PyTorch 2.8.0 with CUDA
+Ultralytics 8.4.144
+```
+
+模型、TensorRT engine、视频和本地数据不提交到 Git。
+
+## 历史实验运行
+
+现有宠物检测与本地 Memory API 仍可运行，用于回归底层能力；它们不是当前产品演示入口。使用前请阅读历史文档并确认模型、gallery 和数据库路径。
+
+## 许可证与隐私
+
+第三方模型与组件需分别检查许可证。持续视频默认只在 Jetson 本地处理；持久化数据优先使用低维状态、事件和聚合指标。

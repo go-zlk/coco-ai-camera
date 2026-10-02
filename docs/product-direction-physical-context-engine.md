@@ -2,6 +2,8 @@
 
 版本：v0.1 · 2026-10-02
 
+执行文档：[MVP PRD](product-requirements-desk-context-mvp.md) · [数据契约](context-contract-v1.md) · [开发任务表](development-backlog.md)
+
 ## 产品定义
 
 项目近期聚焦桌面工作与学习场景，目标是为 AI 提供持续、低维、可查询的现实状态：
@@ -186,4 +188,3 @@ Context API + Web UI + LLM Adapter
 6. 采集两小时数据并人工标注关键片段。
 7. 基于误差决定是否增加人脸关键点/head-pose 模型。
 8. 最后接入 LLM，做有/无 context 的对照测试。
-

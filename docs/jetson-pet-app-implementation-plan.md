@@ -1,5 +1,7 @@
 # Jetson Orin Nano：真实猫咪 → 虚拟宠物
 
+> 状态：历史实验。进程隔离和可靠性设计仍可复用；当前产品需求以 [文档导航](README.md) 为准。
+
 本文件描述目标架构与实施顺序，不代表已部署完成。架构图见 `diagrams/pet-edge-ai-architecture.html`。当前仅根据仓库代码审查，未连接实体 Jetson 验证。
 
 ## 产品闭环与部署边界
