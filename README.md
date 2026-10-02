@@ -1,12 +1,12 @@
 # Physical Context Engine on Jetson Orin Nano
 
-一个本地优先的 Physical Context Engine：持续感知用户在桌面工作/学习时的客观状态，生成带时间窗口、置信度和新鲜度的结构化 Context，供 AI 回答、总结和建议使用。
+一个本地优先的视觉 Context Engine：把摄像头流转成带时间、来源、置信度和新鲜度的状态与事件，供 AI 设备和应用查询。桌面工作场景是当前首个参考应用。
 
-> 产品目标：让 AI 在回答用户之前，先知道用户此刻真实处于什么状态。
+> 产品假设：让运行在真实设备上的 AI，不只看懂当前一帧，还能可靠地知道状态如何随时间变化，并能说明依据。
 
 ## 当前阶段
 
-项目正在从摄像头/宠物感知实验迁移到桌面个人上下文 MVP。
+项目正在从摄像头/宠物感知实验迁移到 Jetson 本地视觉 Context Runtime 的技术与市场验证。桌面个人上下文 MVP 用来验证状态建模和 API，不代表姿态提醒市场已经验证。
 
 已经验证：
 
@@ -95,6 +95,7 @@ LLM 接入排在感知正确性验证之后。
 ## 文档
 
 - [文档导航](docs/README.md)
+- [方向调研与创业决策](docs/strategy-research-2026-10.md)
 - [AI Desk Companion MVP PRD](docs/product-requirements-desk-context-mvp.md)
 - [Physical Context 数据契约 v1](docs/context-contract-v1.md)
 - [Physical Context Engine 产品方向](docs/product-direction-physical-context-engine.md)

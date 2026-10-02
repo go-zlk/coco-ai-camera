@@ -6,7 +6,7 @@
 
 日期：2026-10-03
 
-目标是在两周左右完成 Milestone 0：单摄像头、单用户、连续两小时运行，稳定输出当前 UserState、事件时间线和 Context API。
+目标是在两周左右完成 Milestone 0：单摄像头、单用户、连续两小时运行，稳定输出当前 UserState、事件时间线和 Context API；同时启动创业方向的客户问题验证。桌面场景是 Context Runtime 的参考应用。
 
 ## 阶段门槛
 
@@ -99,6 +99,10 @@
 3. 支持摄像头和视频文件回放。
 4. 输出 JSONL observation 日志。
 5. 不在这一轮推断 fatigue、focus 或 gaze。
+
+## 并行的产品验证
+
+按 [方向调研与创业决策](strategy-research-2026-10.md) 执行客户问题访谈。访谈不阻塞 C01/C02，但 Milestone 0 完成时必须回看证据：如果没有重复痛点和预算信号，不继续扩大成通用 SDK。
 
 ## Definition of Done
 

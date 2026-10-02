@@ -4,10 +4,12 @@
 
 以下文档共同定义当前开发方向，发生冲突时按顺序以前者为准：
 
-1. [AI Desk Companion MVP PRD](product-requirements-desk-context-mvp.md)
-2. [Physical Context 数据契约 v1](context-contract-v1.md)
-3. [Physical Context Engine 产品方向](product-direction-physical-context-engine.md)
-4. [开发任务表](development-backlog.md)
+1. [方向调研与创业决策](strategy-research-2026-10.md)
+2. [AI Desk Companion MVP PRD](product-requirements-desk-context-mvp.md)：当前桌面场景是首个参考应用和验证环境。
+3. [Physical Context 数据契约 v1](context-contract-v1.md)
+4. [Physical Context Engine 产品方向](product-direction-physical-context-engine.md)
+5. [开发任务表](development-backlog.md)
+6. [客户问题访谈指南](customer-discovery-guide.md)
 
 ## 可复用技术文档
 
@@ -28,4 +30,3 @@
 - 旧版架构 HTML 和 Archify 图
 
 已有宠物代码继续保留，用作摄像头、跟踪、状态机、身份 gallery 和本地事件存储的实验资产。
-

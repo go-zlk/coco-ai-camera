@@ -1,16 +1,18 @@
 # Physical Context Engine 产品方向
 
-版本：v0.1 · 2026-10-02
+版本：v0.2 · 2026-10-03
 
-执行文档：[MVP PRD](product-requirements-desk-context-mvp.md) · [数据契约](context-contract-v1.md) · [开发任务表](development-backlog.md)
+策略与执行文档：[创业方向调研](strategy-research-2026-10.md) · [桌面参考应用 PRD](product-requirements-desk-context-mvp.md) · [数据契约](context-contract-v1.md) · [开发任务表](development-backlog.md)
 
 ## 产品定义
 
-项目近期聚焦桌面工作与学习场景，目标是为 AI 提供持续、低维、可查询的现实状态：
+项目的产品假设是为带摄像头的 AI 设备提供本地、持续、可追溯的现实上下文运行时。它把摄像头流转成有时间、来源、置信度和状态变化的结构化状态，供不同模型和 agent 通过稳定接口查询。
+
+首个验证场景是桌面工作与学习：
 
 > 让 AI 在回答用户之前，先知道用户此刻真实处于什么状态。
 
-摄像头是 Context Sensor，Computer Activity 是另一类 Context Sensor。产品输出不是视频，而是带时间范围、置信度和个人基线偏差的 `UserState`。
+摄像头是首个 Context Sensor，Computer Activity 后续可作为另一类 Context Sensor。产品输出不是视频，而是带时间范围、来源、置信度和个人基线偏差的 `UserState` 与领域事件。
 
 ```text
 Camera + Computer Activity
@@ -30,11 +32,11 @@ Camera + Computer Activity
   Outcome Observation
 ```
 
-长期仍可扩展到 Home Context 和 Personal World Model。AI Home Memory 继续作为长期数据与事件模型，但近期入口由家庭场景调整为桌面个人上下文。
+桌面姿态/专注应用是 runtime 的首个参考应用，用于验证感知时序和 API；它本身尚未证明可成为有规模的独立业务。长期可扩展到其他摄像头设备和现场工作流。Home Context 与 Personal World Model 暂作长期探索。
 
 ## 当前产品假设
 
-用户已有大量对话式 AI，但模型通常不知道用户已经工作多久、姿态是否恶化、是否频繁离屏、是否长时间没有活动。把这些上下文作为结构化输入，可能显著提高建议的相关性和时机准确性。
+设备团队能调用检测器或 VLM，但持续状态、时间语义、事件证据、断流处理和隐私生命周期可能仍要逐个项目重做。若这类重复工作耗时且存在明确预算，提供可复用的设备侧 Context Runtime 可能缩短交付时间。桌面用户是否愿意为姿态/工作节奏应用付费，是另一条需要单独验证的假设。
 
 第一版只描述可观察行为，不进行疾病、心理状态或情绪诊断。
 
