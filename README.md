@@ -1,5 +1,7 @@
 # Edge Vision on Jetson Orin Nano
 
+> 当前产品主线：为 AI 提供持续、低维、可查询现实状态的 **Physical Context Engine**。桌面工作/学习场景是第一入口，详见 [产品方向](docs/product-direction-physical-context-engine.md)。
+
 > 端侧视觉推理的工程化实践：把一个「跑不动」的检测模型，通过量化 + TensorRT + 功率调优，在 8GB 共享内存的边缘设备上做到实时，并给出**延迟 / 吞吐 / 内存 / 功耗 / 精度损失**五项实测数据。
 
 <!-- 放一张 30 秒 demo GIF（实时检测画面 + FPS 角标 + 边跑边滚 jtop 功耗） -->
