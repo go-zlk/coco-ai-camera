@@ -95,6 +95,7 @@ LLM 接入排在感知正确性验证之后。
 ## 文档
 
 - [文档导航](docs/README.md)
+- [本地知识库入口](docs/knowledge-base/README.md)
 - [方向调研与创业决策](docs/strategy-research-2026-10.md)
 - [AI Desk Companion MVP PRD](docs/product-requirements-desk-context-mvp.md)
 - [Physical Context 数据契约 v1](docs/context-contract-v1.md)

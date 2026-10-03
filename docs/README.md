@@ -11,6 +11,10 @@
 5. [开发任务表](development-backlog.md)
 6. [客户问题访谈指南](customer-discovery-guide.md)
 
+## 本地知识库
+
+- [Jetson Context Runtime 本地知识库](knowledge-base/README.md)：平台档案、系统地图、术语、视频学习路线和项目决策索引。
+
 ## 可复用技术文档
 
 - [小米摄像头开源接入调研](xiaomi-camera-integration-research.md)
