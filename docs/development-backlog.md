@@ -1,6 +1,6 @@
 # Physical Context Engine 开发任务表
 
-状态：当前执行基线
+状态：桌面人体 Context 技术实验；消费者产品当前路线见 [消费者开发路线](consumer-development-roadmap.md)。本表不再代表当前产品 MVP 排期。
 
 版本：v0.1
 

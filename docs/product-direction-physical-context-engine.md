@@ -1,192 +1,58 @@
-# Physical Context Engine 产品方向
+# 面向消费者的 AI 陪伴产品方向
 
-版本：v0.2 · 2026-10-03
+版本：v0.3 · 2026-10-04  
+状态：当前产品愿景；首个消费者切入口仍待验证
 
-策略与执行文档：[创业方向调研](strategy-research-2026-10.md) · [桌面参考应用 PRD](product-requirements-desk-context-mvp.md) · [数据契约](context-contract-v1.md) · [开发任务表](development-backlog.md)
+权威文档：[方向调研](strategy-research-2026-10.md) · [开发路线](consumer-development-roadmap.md) · [消费者访谈](consumer-discovery-guide.md) · [猫咪桌宠候选 MVP](mvp-spec-single-cat.md)
 
-## 产品定义
+## 产品愿景
 
-项目的产品假设是为带摄像头的 AI 设备提供本地、持续、可追溯的现实上下文运行时。它把摄像头流转成有时间、来源、置信度和状态变化的结构化状态，供不同模型和 agent 通过稳定接口查询。
+面向普通消费者，做一个容易上手、能在日常生活中提供陪伴或实际帮助的 AI 产品。产品从一个反复发生、用户愿意解决的日常问题开始，再逐步扩展到更多生活场景。
 
-首个验证场景是桌面工作与学习：
+当前首个候选切入口是：
 
-> 让 AI 在回答用户之前，先知道用户此刻真实处于什么状态。
+> 上班或离家时，不用反复打开摄像头，也能一眼感受到家里的猫咪大致在做什么，并在需要时回顾一天的活动。
 
-摄像头是首个 Context Sensor，Computer Activity 后续可作为另一类 Context Sensor。产品输出不是视频，而是带时间范围、来源、置信度和个人基线偏差的 `UserState` 与领域事件。
+真实猫咪状态驱动桌宠是一个需要验证的体验假设。消费者是否喜欢、是否低打扰、是否会持续使用和付费，都尚未得到家庭试用证明。桌宠形态不应成为不可更改的前提；如果用户更喜欢简单状态卡片或摘要，就按真实使用调整。
 
-```text
-Camera + Computer Activity
-          ↓
-      Perception
-          ↓
-   Temporal User State
-          ↓
-   Personal Baseline
-          ↓
-     Context API
-          ↓
-          LLM
-          ↓
- Advice / Coaching
-          ↓
-  Outcome Observation
-```
+## 消费者产品原则
 
-桌面姿态/专注应用是 runtime 的首个参考应用，用于验证感知时序和 API；它本身尚未证明可成为有规模的独立业务。长期可扩展到其他摄像头设备和现场工作流。Home Context 与 Personal World Model 暂作长期探索。
+- **容易开始：**目标首次设置不超过 5 分钟；不要求用户打开终端、配置模型、部署开发板或调试 RTSP。
+- **一眼有用：**先显示状态、更新时间和连接情况；只有用户需要时再展开时间线或证据。
+- **诚实可信：**活动、休息、暂时不可见、unknown 和设备离线明确区分；推测不显示为事实。
+- **低打扰：**动画和通知均可关闭；不依赖焦虑通知驱动使用。
+- **用户掌控：**默认本地处理、不默认保存原始视频；提供暂停、删除和清楚的数据说明。
+- **从生活价值决定技术：**不因为模型或 Jetson 能力存在就添加消费者看不到价值的功能。
 
-## 当前产品假设
-
-设备团队能调用检测器或 VLM，但持续状态、时间语义、事件证据、断流处理和隐私生命周期可能仍要逐个项目重做。若这类重复工作耗时且存在明确预算，提供可复用的设备侧 Context Runtime 可能缩短交付时间。桌面用户是否愿意为姿态/工作节奏应用付费，是另一条需要单独验证的假设。
-
-第一版只描述可观察行为，不进行疾病、心理状态或情绪诊断。
-
-## Milestone 0：两小时连续状态输出
-
-### 输入
-
-- 单路 CSI 摄像头。
-- 单用户、固定桌面机位。
-- 可选的本机键鼠/前台应用活动，后续单独接入。
-
-### 输出
-
-每 5–30 秒生成一次 `user_state.json`：
-
-```json
-{
-  "observed_at": "2026-10-02T10:30:00+08:00",
-  "presence": "present",
-  "continuous_session_seconds": 4080,
-  "posture": "forward",
-  "forward_head_ratio_20m": 0.37,
-  "posture_trend": "declining",
-  "head_orientation": "screen",
-  "screen_facing_ratio_10m": 0.82,
-  "look_away_count_10m": 11,
-  "left_desk_count_60m": 0,
-  "confidence": 0.86,
-  "freshness_seconds": 2.4,
-  "source_health": "online"
-}
-```
-
-Milestone 0 只承诺：
-
-- 是否在桌前。
-- 连续在座时间。
-- 明显前倾/正常/无法判断。
-- 粗粒度头部方向：屏幕、低头、侧向、未知。
-- 离座次数。
-- 连续运行两小时。
-
-“凝视屏幕”和精细 gaze 需要人脸关键点或专用 head-pose 模型，不能仅凭 COCO 人体关键点做强结论。
-
-## 软件架构
+## 首个候选体验
 
 ```text
-CSI / RTSP
-   ↓
-Capture Worker
-   ↓ latest-frame queue
-Person + Pose Inference
-   ↓ observations
-Feature Extractor
-   ↓ presence/posture/head orientation
-Temporal Aggregator
-   ↓ windows, debounce, session boundaries
-Personal Baseline
-   ↓ deviation from self
-Context Store (SQLite WAL)
-   ↓
-Context API + Web UI + LLM Adapter
+家中摄像头
+    ↓
+Jetson 本地采集与猫咪检测/跟踪
+    ↓
+时间状态：活动 / 休息 / 暂时不可见 / 离线 / unknown
+    ↓
+状态事件与当日时间线
+    ↓
+桌面或手机陪伴界面
 ```
 
-### 进程边界
+Jetson 和 Context Runtime 是研发与未来设备架构的内部底座，不是最终消费者产品。原型采用 Jetson 不应成为量产形态的默认结论；后续根据安装体验、摄像头兼容、成本与可靠性选择电脑端、手机端、现有摄像头或简化专用设备。
 
-第一阶段继续采用两进程思路：
+## 竞争边界
 
-1. `context-worker`：拥有摄像头和 GPU，输出结构化 observation。
-2. `context-service`：聚合时间状态、管理 SQLite、提供 API，并监督 worker。
+宠物摄像头厂商和 Google Home 已经提供宠物识别、事件描述、视频回顾和自然语言查询。只做检测、每日摘要或问答很容易被现有平台覆盖。候选差异是更有温度的实时陪伴、可信的宠物状态时间线、低打扰交互和透明隐私，但这些差异必须通过用户行为和实际付款验证。
 
-推理进程崩溃或摄像头断流时，服务仍能返回 `source_health=offline` 和最后更新时间。
+## 第一轮成功标准
 
-## 与现有代码的关系
+1. 目标用户能在 5 分钟内独立完成原型设置。
+2. 用户能区分真实观察、暂时不可见和设备离线，误判不会持续误导。
+3. 第二周仍有用户在工作日主动使用，而不是只在首次演示时觉得可爱。
+4. 一部分用户愿意为清楚定义的产品版本实际付款。
 
-### 直接复用
+当前门槛和停止条件详见[消费者产品开发路线](consumer-development-roadmap.md)。
 
-- `open_capture()`：CSI、文件和后续 RTSP 输入。
-- YOLO/Ultralytics 推理框架与 TensorRT 部署路径。
-- 跟踪、状态防抖和轨迹级稳定思想。
-- `MemoryStore` 的 SQLite WAL、实体、观测和事件结构。
-- `/api/status`、`/api/timeline`、`/api/entities` 的本地 API 基础。
-- 摄像头断流、offline 状态、systemd 和性能观测设计。
+## 长期扩展
 
-### 需要替换或扩展
-
-- `cat` detector → `person + pose` detector。
-- `CatStateEstimator` → `UserStateAggregator`。
-- Coco/Kui gallery → 单用户 profile 与 personal baseline。
-- `state_changed` → session、posture、break、source-health 等领域事件。
-- 单帧身份分数 → 时间窗口、趋势和数据新鲜度。
-
-### 暂停为扩展能力
-
-- 宠物个体识别精度优化。
-- 小米摄像头控制与多摄像头接入。
-- 家庭物体位置追踪。
-- 生成式回放。
-- 自动控制智能家居。
-
-这些代码保留，但不进入近期关键路径。
-
-## UserState 的事实边界
-
-每个字段都必须携带以下语义：
-
-- `value`：当前值。
-- `confidence`：模型和时序聚合后的可信度。
-- `observed_at`：最后真实观测时间。
-- `freshness`：状态是否过期。
-- `window`：计算所使用的时间窗口。
-- `source`：camera、computer 或融合结果。
-
-无法观察时输出 `unknown`，不沿用过期状态伪装成当前事实。
-
-## 个人基线
-
-统一阈值只用于冷启动。积累足够数据后，系统学习：
-
-- 常见坐姿关键点分布。
-- 正常连续工作时长。
-- 常见休息周期。
-- 不同时间段的活动模式。
-
-异常判断表达为“相对本人近期基线的偏离”，并保留基线版本和样本数量。
-
-## 验证指标
-
-### 感知与状态
-
-- Presence precision / recall。
-- 离座和返回事件时间误差。
-- 前倾状态与用户人工标注的一致率。
-- 状态抖动次数和 unknown 比例。
-- 连续运行两小时的断流、崩溃和内存变化。
-
-### 产品体验
-
-- Context Correctness：用户是否认可状态描述。
-- Advice Relevance：加入上下文后，建议是否优于无上下文回答。
-- Interruption Cost：提示是否打扰。
-- 用户是否感到“AI 知道我现在的真实状态”。
-
-## 接下来的实现顺序
-
-1. 增加 Pose 模型运行模式，输出人体关键点 observation。
-2. 实现 presence/session 状态机和离座事件。
-3. 实现基础 posture 特征与时序窗口。
-4. 输出本地 `user_state.json` 并写入 SQLite。
-5. 扩展 `/v1/context/current` 与历史趋势 API。
-6. 采集两小时数据并人工标注关键片段。
-7. 基于误差决定是否增加人脸关键点/head-pose 模型。
-8. 最后接入 LLM，做有/无 context 的对照测试。
+如果第一个消费者场景证明有持续价值，再探索其他宠物、家庭日常和个人生活场景。每次扩展都重新确认具体用户、问题频率、设置成本和付费行为，不把“AI 理解生活”本身当作已经成立的需求。

@@ -1,8 +1,8 @@
 # 单猫状态桌宠 MVP
 
-> 状态：历史实验。当前 MVP 已切换到桌面 Physical Context Engine，执行基线见 [文档导航](README.md)。
+> 状态：消费者产品的首个候选 MVP，尚待养猫用户访谈和付费测试验证；不是已锁定的量产需求。
 
-实施入口：[软件开发指引](software-development-guide.md)、[任务与依赖清单](development-backlog.md)、[MVP 软件实现架构图](diagrams/mvp-software-architecture.html)。指引细化内部 unknown、客户端失联、崩溃恢复及两周投入假设；下文性能目标均需实测。
+实施参考：[软件开发指引](software-development-guide.md)、[消费者产品开发路线](consumer-development-roadmap.md)、[MVP 软件实现架构图](diagrams/mvp-software-architecture.html)。本文定义候选产品体验；是否进入完整开发取决于消费者访谈、试用和付费证据。性能目标均需实测。
 
 ## 目标
 

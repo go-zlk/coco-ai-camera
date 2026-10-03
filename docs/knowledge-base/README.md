@@ -1,6 +1,6 @@
-# Jetson Context Runtime 本地知识库
+# Jetson 消费者 AI 项目本地知识库
 
-本目录是项目的学习与工程知识入口，用于回答三类问题：板子和软件环境是什么、系统各层如何连接、我们为什么选择当前开发方向。
+本目录是项目的学习与工程知识入口，用于回答三类问题：板子和软件环境是什么、系统各层如何连接、消费者产品为什么选择当前方向。
 
 ## 从这里开始
 
@@ -12,13 +12,15 @@
 
 ## 权威文档
 
-知识库负责解释和导航，产品行为与开发验收以以下文档为准：
+知识库负责解释和导航，消费者产品方向与开发验收以以下文档为准：
 
 - [方向调研与创业决策](../strategy-research-2026-10.md)
-- [桌面 Context 参考应用 PRD](../product-requirements-desk-context-mvp.md)
-- [Context 数据契约](../context-contract-v1.md)
-- [开发任务与门槛](../development-backlog.md)
-- [客户问题访谈指南](../customer-discovery-guide.md)
+- [消费者 AI 陪伴产品方向](../product-direction-physical-context-engine.md)
+- [消费者产品开发路线](../consumer-development-roadmap.md)
+- [猫咪桌宠候选 MVP](../mvp-spec-single-cat.md)
+- [消费者问题访谈指南](../consumer-discovery-guide.md)
+
+人体 Pose 的旧 PRD/任务表和 UserState 契约只作为可复用的工程参考，不是当前消费者产品定义。
 
 ## 维护规则
 

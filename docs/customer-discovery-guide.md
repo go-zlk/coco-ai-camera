@@ -1,4 +1,6 @@
-# Physical Context Runtime 客户问题访谈
+# 历史记录：Physical Context Runtime 开发者访谈
+
+状态：旧 B2B/SDK 假设的访谈草案。当前面向普通消费者的研究以 [消费者问题访谈指南](consumer-discovery-guide.md) 为准。
 
 目标：两周内判断设备开发团队是否有重复、昂贵且有预算的持续视觉状态/事件问题。访谈不是产品推介，也不能用“你会不会用”代替真实经历。
 
