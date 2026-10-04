@@ -36,3 +36,9 @@
 - 旧版架构 HTML 和 Archify 图
 
 已有宠物代码继续保留，用作摄像头、跟踪、状态机、身份 gallery 和本地事件存储的实验资产。
+
+## 工程开发
+
+- [工程分层与目录规范](development/project-layout.md)
+- [C++ 运行时构建与运行](development/cpp-runtime.md)
+- [开发与贡献指引](../CONTRIBUTING.md)

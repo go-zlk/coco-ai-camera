@@ -1,6 +1,6 @@
 # 面向消费者的 AI 陪伴产品原型
 
-C++ 主框架见 [cpp/README.md](cpp/README.md)：摄像头接入、TensorRT/ONNX 推理、状态事件、SQLite 和本地 Context API。Python 原型保留用于数据采集和模型准备。
+C++ 主框架见 [C++ 开发指引](docs/development/cpp-runtime.md)：摄像头接入、TensorRT/ONNX 推理、状态事件、SQLite 和本地 Context API。Python 原型保留用于数据采集和模型准备。
 
 我们的目标是做一个普通消费者容易上手、能在日常生活中提供陪伴或实际帮助的 AI 产品。当前优先验证“真实猫咪状态驱动桌宠”的消费者体验；Jetson 上的视觉 Context Engine 是研发底座，不是最终要消费者购买的开发平台。
 
@@ -94,18 +94,20 @@ Desktop / Phone Companion
 
 ```text
 .
-├── infer.py                   # 已有检测/跟踪实验入口
-├── memory_store.py            # SQLite WAL 事件存储基础
-├── memory_api.py              # 已有本地查询 API 基础
-├── state_estimator.py         # 历史状态机实验
-├── identity_*.py              # 历史宠物身份实验
-├── enroll_pet.py              # 历史宠物注册实验
-├── trackers/                  # 跟踪器配置
-├── scripts/                   # TensorRT/功耗工具
-└── docs/                      # 当前产品文档与历史研究
+├── apps/                 # 可执行程序入口
+├── include/coco/         # 分模块公开头文件
+├── src/                  # C++ 各层实现
+├── tests/                # 单元与模块集成测试
+├── cmake/                # 构建配置和编译选项
+├── scripts/              # 开发、验证和模型工具
+├── prototypes/python/    # 原有 Python 实验与采集工具
+├── docs/                 # 产品、架构与开发指引
+└── .github/workflows/    # 持续集成
 ```
 
 桌面人体 Pose 文档作为可复用技术实验保留；小米摄像头与 Home Memory 继续作为后续选项，不进入首个消费者验证周期。
+
+工程分层和开发规则见 [工程结构](docs/development/project-layout.md) 与 [贡献指引](CONTRIBUTING.md)。
 
 ## 当前开发环境
 

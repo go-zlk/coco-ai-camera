@@ -1,0 +1,31 @@
+name: C++ checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  linux-cpu:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ libopencv-dev libsqlite3-dev
+          python3 -m venv /tmp/coco-tools
+          /tmp/coco-tools/bin/pip install clang-format==18.1.8
+      - name: Check formatting and layer boundaries
+        run: |
+          CLANG_FORMAT=/tmp/coco-tools/bin/clang-format scripts/format_cpp.sh --check
+          python3 scripts/check_layers.py
+      - name: Build and test CPU runtime
+        run: |
+          cmake -S . -B build -DCOCO_TENSORRT=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+          ctest --test-dir build --output-on-failure
+      - name: Build domain without OpenCV or CUDA discovery
+        run: |
+          cmake -S . -B build/domain -DCOCO_BUILD_RUNTIME=OFF
+          cmake --build build/domain -j2
+          ctest --test-dir build/domain --output-on-failure
