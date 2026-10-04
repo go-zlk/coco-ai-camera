@@ -8,3 +8,9 @@ docs/demo.gif
 output/
 go2rtc.yaml
 go2rtc.yml
+build/
+data/
+local/
+*.db
+*.db-wal
+*.db-shm
