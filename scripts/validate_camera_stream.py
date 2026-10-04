@@ -16,6 +16,9 @@ def main():
     parser.add_argument('--seconds', type=float, default=30)
     parser.add_argument('--model', default=str(Path(__file__).resolve().parents[1] / 'yolov8n.pt'))
     parser.add_argument('--device', default='cpu')
+    parser.add_argument('--target', choices=['person', 'cat', 'both'], default='both',
+                        help='要统计的目标类别；person 适合用人验证视频链路')
+    parser.add_argument('--conf', type=float, default=0.25)
     args = parser.parse_args()
     if args.seconds <= 0:
         parser.error('--seconds must be positive')
@@ -26,6 +29,7 @@ def main():
     ])
     if not cap.isOpened():
         raise SystemExit('视频源打开失败；先检查 go2rtc 是否正在运行、摄像头是否在线。')
+    class_ids = {'person': [0], 'cat': [15], 'both': [0, 15]}[args.target]
     started = time.monotonic()
     frames = checks = 0
     detections = Counter()
@@ -43,8 +47,8 @@ def main():
             now = time.monotonic()
             if now - last_check >= 1:
                 last_check = now
-                result = model(frame, classes=[0, 15], device=args.device,
-                               imgsz=640, conf=0.25, verbose=False)[0]
+                result = model(frame, classes=class_ids, device=args.device,
+                               imgsz=640, conf=args.conf, verbose=False)[0]
                 checks += 1
                 # Count frames with each class, not unique animals or people.
                 for cls in set(result.boxes.cls.int().tolist()):
@@ -58,6 +62,8 @@ def main():
         'decoded_fps': round(frames / elapsed, 2),
         'resolution': shape,
         'inference_checks': checks,
+        'target': args.target,
+        'confidence_threshold': args.conf,
         'checks_with_detection': dict(detections),
         'read_failures': failures,
         'media_saved': False,

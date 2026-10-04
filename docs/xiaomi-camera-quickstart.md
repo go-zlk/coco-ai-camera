@@ -21,13 +21,15 @@ Mac 先验证取流和播放，无需安装 CUDA 或 Jetson 的 PyTorch 环境�
 
 ### 不保存画面的检测检查
 
-在安装了 ultralytics、opencv-python 的独立 Python 环境中运行：
+在安装了 ultralytics、opencv-python 的独立 Python 环境中运行。建议先用人在镜头前验证：
 
 ```bash
-python scripts/validate_camera_stream.py --seconds 30 --device cpu
+python scripts/validate_camera_stream.py --seconds 30 --target person --device mps
 ```
 
-该脚本通过本地 RTSP 解码，约每秒抽取一帧运行现有 YOLOv8n 模型，只检测人和猫，不开窗口、不保存图像或视频。输出解码帧数、尺寸、检测次数和读取失败数；“检测到猫的次数”指采样帧数，不是猫的数量或身份。它验证数据链路，不能用于证明识别准确率、低延迟或长期稳定性。读流失败退出并报告，不自动重连；打开和单次读取有超时限制。
+猫咪验证使用 `--target cat`；同时观察人和猫使用 `--target both`。
+
+该脚本通过本地 RTSP 解码，约每秒抽取一帧运行现有 YOLOv8n 模型，不开窗口、不保存图像或视频。输出解码帧数、尺寸、检测次数和读取失败数；检测次数指采样帧数，不是目标数量或身份。它验证数据链路，不能用于证明识别准确率、低延迟或长期稳定性。读流失败退出并报告，不自动重连；打开和单次读取有超时限制。
 
 ## 1. 在 Jetson 启动桥接器
 
