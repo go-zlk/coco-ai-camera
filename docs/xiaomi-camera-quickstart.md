@@ -3,7 +3,7 @@
 ## 当前设备与状态
 
 - 用户设备：小米智能摄像机 4 4K 版，固件 `5.3.2_0845`，中国大陆。
-- 内部型号、取流兼容性、云台控制均待实测。其他室外版、变焦版的成功记录不代表本机兼容。
+- 内部型号：`chuangmi.camera.079ac1`。2026-10-04 已在 Apple Silicon Mac 上用 go2rtc v1.9.14 取流成功，浏览器实际显示画面，协议为 xiaomi/miss、视频编码 H.265。云台控制、30 分钟稳定性与断网恢复仍待实测。
 - Jetson 地址：`192.168.0.111`。2026-10-04 本次部署尝试 SSH 超时，尚未安装或取到画面。
 - 使用官方 go2rtc `v1.9.14` Linux ARM64 发布文件，脚本校验官方发布元数据的 SHA-256。
 
@@ -18,6 +18,16 @@ bash scripts/start_camera_bridge.sh
 直接打开 <http://127.0.0.1:1984>，按下文 Add → Xiaomi 步骤登录。无需 Jetson 或 SSH 转发。脚本自动选择固定版本的 Mac ARM64 官方压缩包，校验 SHA-256 后启动。关闭运行终端或 Ctrl+C 可停止，重新执行脚本可以恢复；不自动开机启动。
 
 Mac 先验证取流和播放，无需安装 CUDA 或 Jetson 的 PyTorch 环境。Mac 的账号配置保存在 `~/.config/coco-ai-camera/go2rtc.yaml`，不在 Git 内。Mac 取流成功不代表 Jetson 已验证；后续在 Jetson 重新运行脚本、登录并验证解码即可。
+
+### 不保存画面的检测检查
+
+在安装了 ultralytics、opencv-python 的独立 Python 环境中运行：
+
+```bash
+python scripts/validate_camera_stream.py --seconds 30 --device cpu
+```
+
+该脚本通过本地 RTSP 解码，约每秒抽取一帧运行现有 YOLOv8n 模型，只检测人和猫，不开窗口、不保存图像或视频。输出解码帧数、尺寸、检测次数和读取失败数；“检测到猫的次数”指采样帧数，不是猫的数量或身份。它验证数据链路，不能用于证明识别准确率、低延迟或长期稳定性。读流失败退出并报告，不自动重连；打开和单次读取有超时限制。
 
 ## 1. 在 Jetson 启动桥接器
 
