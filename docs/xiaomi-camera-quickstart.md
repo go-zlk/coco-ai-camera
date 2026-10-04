@@ -4,7 +4,7 @@
 
 - 用户设备：小米智能摄像机 4 4K 版，固件 `5.3.2_0845`，中国大陆。
 - 内部型号：`chuangmi.camera.079ac1`。2026-10-04 已在 Apple Silicon Mac 上用 go2rtc v1.9.14 取流成功，浏览器实际显示画面，协议为 xiaomi/miss、视频编码 H.265。云台控制、30 分钟稳定性与断网恢复仍待实测。
-- Jetson 地址：`192.168.0.111`。2026-10-04 本次部署尝试 SSH 超时，尚未安装或取到画面。
+- Jetson 当前地址：`192.168.0.117`（原为 `192.168.0.111`）。2026-10-05 已同步桥接、验证脚本及本指引，并完成 CUDA 人物检测验证。
 - 使用官方 go2rtc `v1.9.14` Linux ARM64 发布文件，脚本校验官方发布元数据的 SHA-256。
 
 ## 先在笔记本验证（Apple Silicon Mac）
@@ -48,7 +48,7 @@ bash scripts/start_camera_bridge.sh
 电脑另开终端，保持下列连接运行：
 
 ```bash
-ssh -N -o ExitOnForwardFailure=yes -L 11984:127.0.0.1:1984 zlk@192.168.0.111
+ssh -N -o ExitOnForwardFailure=yes -L 11984:127.0.0.1:1984 zlk@192.168.0.117
 ```
 
 浏览器打开 <http://127.0.0.1:11984>。在 Jetson 桌面本机操作时，可直接打开 <http://127.0.0.1:1984>。
@@ -78,6 +78,24 @@ python infer.py --source rtsp://127.0.0.1:8554/xiaomi_living_room --model yolov8
 现有 live 模式需要显示环境，纯 SSH 会话不要以显示失败判断视频不兼容。OpenCV 实际 RTSP 解码能力也需要验证。先保持默认画质；如果带宽或解码负载高，再尝试官方支持的 `subtype=sd`，不假定某个数字代表 4K。
 
 ## 验收记录
+
+### 2026-10-05 板端短时验证
+
+板端工程是文件副本，没有 `.git`；此次只同步新增的两个脚本与接入指引，保留原模型、采集数据和代码。两个脚本的 SHA-256 已与笔记本比对一致。
+
+验证链路：小米摄像头 → Mac go2rtc → SSH 反向转发 → Jetson OpenCV → YOLOv8n CUDA。米家凭据未复制到板端。结果：30.03 秒、617 解码帧、20.55 FPS、848×480、27 次推理，其中 18 次检测到人、0 次读取失败、未保存媒体。
+
+结果证明板端解码及 GPU 推理可运行；不代表板端独立小米登录、直连、长时稳定性或断网恢复已完成。首次加入 H.265 流时出现一次参考帧提示，之后正常解码，未出现读取失败。该帧率包含实时源速率约束，不代表 Jetson 最大推理吞吐。
+
+如复现这个临时验证方案，在 Mac 上保持 go2rtc 运行，然后执行：
+
+```bash
+ssh -o ExitOnForwardFailure=yes \
+  -R 127.0.0.1:18554:127.0.0.1:8554 zlk@192.168.0.117 \
+  'cd ~/jetson-edge-vision && OPENCV_FFMPEG_CAPTURE_OPTIONS="rtsp_transport;tcp" ~/venvs/pet-edge/bin/python scripts/validate_camera_stream.py --source rtsp://127.0.0.1:18554/xiaomi_living_room --seconds 30 --target person --device 0'
+```
+
+测试退出后 SSH 隧道随连接关闭。新 IP 的主机公钥已人工比对与原 IP 一致；若本机尚未记录新地址，可使用 `-o HostKeyAlias=192.168.0.111` 引用原来已信任的主机身份，不需要关闭主机校验。
 
 记录开始和结束时间、内部型号、分辨率、编码、实际帧率、断流次数。保持实际消费者（播放器或推理）连接 30 分钟，不能以管理页面开着代替持续取流。然后测试一次摄像头断网再恢复，分别记录桥接器恢复时间和推理程序是否需要重启；当前尚未承诺推理程序自动重连。
 
