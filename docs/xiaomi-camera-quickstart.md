@@ -7,6 +7,18 @@
 - Jetson 地址：`192.168.0.111`。2026-10-04 本次部署尝试 SSH 超时，尚未安装或取到画面。
 - 使用官方 go2rtc `v1.9.14` Linux ARM64 发布文件，脚本校验官方发布元数据的 SHA-256。
 
+## 先在笔记本验证（Apple Silicon Mac）
+
+Mac 与摄像头连接同一个可互通的局域网，在工程目录执行：
+
+```bash
+bash scripts/start_camera_bridge.sh
+```
+
+直接打开 <http://127.0.0.1:1984>，按下文 Add → Xiaomi 步骤登录。无需 Jetson 或 SSH 转发。脚本自动选择固定版本的 Mac ARM64 官方压缩包，校验 SHA-256 后启动。关闭运行终端或 Ctrl+C 可停止，重新执行脚本可以恢复；不自动开机启动。
+
+Mac 先验证取流和播放，无需安装 CUDA 或 Jetson 的 PyTorch 环境。Mac 的账号配置保存在 `~/.config/coco-ai-camera/go2rtc.yaml`，不在 Git 内。Mac 取流成功不代表 Jetson 已验证；后续在 Jetson 重新运行脚本、登录并验证解码即可。
+
 ## 1. 在 Jetson 启动桥接器
 
 在 Jetson 的工程目录更新代码后执行：
