@@ -6,3 +6,5 @@ __pycache__/
 *.mp4
 docs/demo.gif
 output/
+go2rtc.yaml
+go2rtc.yml
