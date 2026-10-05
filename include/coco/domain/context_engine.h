@@ -19,6 +19,7 @@ struct Observation {
   size_t cat_count = 0;
   float person_confidence = 0;
   float cat_confidence = 0;
+  std::vector<TrackSnapshot> tracks;
   double inference_ms = 0;
 };
 

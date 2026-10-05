@@ -38,7 +38,24 @@ std::string ContextJson(const Context& c, Clock::time_point now) {
     << ",\"person\":" << JsonString(c.person) << ",\"cat\":" << JsonString(c.cat)
     << ",\"person_count\":" << c.person_count << ",\"cat_count\":" << c.cat_count
     << ",\"sequence\":" << c.sequence << ",\"dropped_frames\":" << c.dropped_frames
-    << ",\"inference_ms\":" << c.inference_ms << ",\"freshness_seconds\":" << age << '}';
+    << ",\"inference_ms\":" << c.inference_ms << ",\"freshness_seconds\":" << age
+    << ",\"tracks\":[";
+  bool first = true;
+  for (const auto& track : c.tracks) {
+    if (!first) {
+      s << ',';
+    }
+    first = false;
+    s << "{\"track_id\":" << track.track_id << ",\"class_id\":" << track.class_id
+      << ",\"status\":" << JsonString(track.status)
+      << ",\"observed\":" << (track.observed ? "true" : "false")
+      << ",\"confirmed\":" << (track.confirmed ? "true" : "false")
+      << ",\"confidence\":" << track.confidence << ",\"last_seen_age_seconds\":"
+      << std::chrono::duration<double>(now - track.last_seen).count()
+      << ",\"bbox\":{\"x\":" << track.box.x << ",\"y\":" << track.box.y
+      << ",\"width\":" << track.box.width << ",\"height\":" << track.box.height << "}}";
+  }
+  s << "]}";
   return s.str();
 }
 }  // namespace coco

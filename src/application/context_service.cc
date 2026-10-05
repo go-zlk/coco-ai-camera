@@ -10,6 +10,7 @@
 
 #include "coco/capture/camera_source.h"
 #include "coco/domain/context_engine.h"
+#include "coco/perception/box_tracker.h"
 #include "coco/perception/detector.h"
 #include "coco/storage/event_store.h"
 #include "coco/transport/context_api.h"
@@ -34,6 +35,7 @@ int RunContextService(const ServiceConfig& config, const std::function<bool()>& 
   });
   coco::CameraSource source(config.source);
   coco::ContextEngine engine(config.source_id);
+  coco::BoxTracker tracker;
   api.Start();
   source.Start();
   auto started = coco::Clock::now(), next = started;
@@ -63,9 +65,15 @@ int RunContextService(const ServiceConfig& config, const std::function<bool()>& 
       now = coco::Clock::now();
       next = now + std::chrono::milliseconds(config.interval_ms);
       ++inferred;
+      std::vector<BoxDetection> boxes;
       size_t people = 0, cats = 0;
       float pc = 0, cc = 0;
       for (const auto& d : detections) {
+        boxes.push_back(
+            {d.class_id,
+             d.confidence,
+             {double(d.box.x) / frame->image.cols, double(d.box.y) / frame->image.rows,
+              double(d.box.width) / frame->image.cols, double(d.box.height) / frame->image.rows}});
         if (d.class_id == 0) {
           ++people;
           pc = std::max(pc, d.confidence);
@@ -86,9 +94,15 @@ int RunContextService(const ServiceConfig& config, const std::function<bool()>& 
       observation.person_confidence = pc;
       observation.cat_confidence = cc;
       observation.inference_ms = std::chrono::duration<double, std::milli>(now - begin).count();
+      if (now - frame->received < std::chrono::seconds(2)) {
+        observation.tracks = tracker.Update(boxes, frame->received);
+      }
       publish(engine.Observe(observation, now));
     } else {
       publish(engine.Tick(now, coco::UtcNow()));
+      if (engine.context().health == "offline") {
+        tracker.Reset();
+      }
     }
   }
 

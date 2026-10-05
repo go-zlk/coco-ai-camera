@@ -71,7 +71,7 @@ coco-ai-camera/
 
 | 后续能力 | 主要落点 | 输入与输出 |
 |---|---|---|
-| 目标跟踪 | perception 独立 tracker | Detection → TrackObservation |
+| 目标跟踪（基线已实现） | perception/box_tracker；coco_tracking 独立库 | BoxDetection → TrackSnapshot |
 | 宠物身份 | perception 独立 identity | 目标裁剪/特征 → 身份候选与置信度 |
 | 活动/休息状态 | domain 的时序规则 | 多次观察 → 状态/事件 |
 | 多摄像头 | application 调度；capture 源实例 | source_id 隔离的观察与健康状态 |
@@ -96,3 +96,5 @@ coco-ai-camera/
 
 - [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html)
 - [ClangFormat 配置说明](https://clang.llvm.org/docs/ClangFormatStyleOptions.html)
+
+`coco_tracking` 是不依赖 OpenCV 的 perception 子模块，链接标准库 domain 值类型。实时服务与回放复用它，设计见 [短期主体跟踪](tracking.md)。

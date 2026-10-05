@@ -75,4 +75,14 @@ int main() {
     rejected = true;
   }
   Require(rejected, "invalid tick must not invent a detection");
+  config.input = COCO_TRACKING_FIXTURE;
+  config.database = ":memory:";
+  std::ostringstream tracking_output;
+  Require(coco::RunReplayService(config, tracking_output) == 12, "tracking fixture row count");
+  Require(tracking_output.str().find("\"status\":\"lost\"") != std::string::npos,
+          "tracking replay retains lost history");
+  Require(tracking_output.str().find("\"tracks\":[]") != std::string::npos,
+          "offline tracking snapshot is cleared");
+  Require(tracking_output.str().find("\"track_id\":3") != std::string::npos,
+          "stream recovery receives a new track ID");
 }

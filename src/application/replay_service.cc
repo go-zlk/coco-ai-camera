@@ -10,6 +10,7 @@
 
 #include "coco/domain/context_engine.h"
 #include "coco/storage/event_store.h"
+#include "tracking_replay.h"
 namespace coco {
 namespace {
 constexpr const char* kHeader =
@@ -56,7 +57,13 @@ size_t RunReplayService(const ReplayConfig& config, std::ostream& output) {
     }
     return true;
   };
-  if (!read_line() || line != kHeader) {
+  if (!read_line()) {
+    throw std::invalid_argument("Missing replay header");
+  }
+  if (line == kTrackingReplayHeader) {
+    return RunTrackingReplay(config, output);
+  }
+  if (line != kHeader) {
     throw std::invalid_argument("Unexpected replay CSV header");
   }
   EventStore store(config.database);

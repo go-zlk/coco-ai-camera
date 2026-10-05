@@ -4,9 +4,13 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <vector>
+
+#include "coco/domain/clock.h"
+#include "coco/domain/tracking.h"
 
 namespace coco {
-using Clock = std::chrono::steady_clock;
+
 struct Event {
   std::string source_id, category, state, observed_at;
   float confidence = 0;
@@ -16,6 +20,7 @@ struct Context {
   std::string person = "unknown", cat = "unknown";
   uint64_t sequence = 0, dropped_frames = 0;
   size_t person_count = 0, cat_count = 0;
+  std::vector<TrackSnapshot> tracks;
   double inference_ms = 0;
   Clock::time_point updated{};
 };

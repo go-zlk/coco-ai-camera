@@ -36,4 +36,6 @@ jobs:
       - name: Build and test local core
         run: scripts/build_local.sh
       - name: Exercise replay executable
-        run: ./build/local/coco-replay --input tests/fixtures/observations.csv --db /tmp/coco-replay-ci.db
+        run: |
+          ./build/local/coco-replay --input tests/fixtures/observations.csv --db /tmp/coco-replay-ci.db
+          ./build/local/coco-replay --input tests/fixtures/tracking.csv --db /tmp/coco-tracking-ci.db

@@ -65,6 +65,7 @@ std::vector<Event> ContextEngine::Observe(const Observation& observation, Clock:
   context_.observed_at = observation.observed_at;
   context_.updated = observation.received;
   context_.inference_ms = observation.inference_ms;
+  context_.tracks = observation.tracks;
   last_observation_ = observation.received;
   has_observation_ = true;
   return events;
@@ -80,6 +81,7 @@ std::vector<Event> ContextEngine::Tick(Clock::time_point now, const std::string&
   context_.health = "offline";
   context_.person = person_.state();
   context_.cat = cat_.state();
+  context_.tracks.clear();
   context_.person_count = 0;
   context_.cat_count = 0;
   // Keep the last successful observation timestamp for truthful freshness.
