@@ -48,3 +48,6 @@
 - [短期主体跟踪与双猫回放](development/tracking.md)
 
 - [单猫四态 POC 验收](development/pet-poc.md)
+
+- [真实链路验收与运行监测](development/real-chain-acceptance.md)
+- [近期交付顺序与验收门槛](development/delivery-roadmap.md)

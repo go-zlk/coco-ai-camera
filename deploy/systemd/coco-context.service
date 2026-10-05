@@ -1,0 +1,19 @@
+# User service template. Install only after foreground hardware acceptance.
+[Unit]
+Description=Coco local camera context service
+StartLimitIntervalSec=120
+StartLimitBurst=5
+
+[Service]
+Type=simple
+EnvironmentFile=%h/.config/coco/context.env
+WorkingDirectory=%h
+ExecStart=%h/.local/coco/bin/coco-context --source ${COCO_SOURCE} --model ${COCO_MODEL} --backend ${COCO_BACKEND} --source-id camera_1 --db %h/.local/share/coco/context.db --web-root %h/.local/coco/share/coco/web --port 8090
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=15
+NoNewPrivileges=true
+UMask=0077
+
+[Install]
+WantedBy=default.target
