@@ -12,6 +12,9 @@ class EventStore {
   ~EventStore();
   void Append(const Event& event);
   std::string Timeline();
+  // Persist pet-state intervals; a gap beyond five seconds is explicitly unknown.
+  void RecordContext(const Context& context, int64_t at);
+  std::string DayTimeline(const std::string& source, const std::string& utc_day, int64_t now);
   EventStore(const EventStore&) = delete;
   EventStore& operator=(const EventStore&) = delete;
 

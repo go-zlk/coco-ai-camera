@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <string>
 
+#include "coco/domain/utc_time.h"
 #include "coco/storage/event_store.h"
 
 namespace {
@@ -41,8 +42,9 @@ int main() {
   sqlite3* database = nullptr;
   Require(sqlite3_open(config.database.c_str(), &database) == SQLITE_OK, "open replay database");
   sqlite3_stmt* statement = nullptr;
-  int rc = sqlite3_prepare_v2(database, "SELECT category,state FROM context_events ORDER BY id", -1,
-                              &statement, nullptr);
+  int rc = sqlite3_prepare_v2(
+      database, "SELECT category,state FROM context_events WHERE category!='pet' ORDER BY id", -1,
+      &statement, nullptr);
   if (rc != SQLITE_OK) {
     sqlite3_close(database);
     throw std::runtime_error("Prepare failed");
@@ -85,4 +87,20 @@ int main() {
           "offline tracking snapshot is cleared");
   Require(tracking_output.str().find("\"track_id\":3") != std::string::npos,
           "stream recovery receives a new track ID");
+  config.input = COCO_PET_FIXTURE;
+  config.database = (workspace.path / "pet.db").string();
+  std::ostringstream pet_output;
+  Require(coco::RunReplayService(config, pet_output) == 47, "pet fixture row count");
+  for (const auto* state : {"active", "resting", "out_of_view", "offline"}) {
+    Require(
+        pet_output.str().find(std::string("\"pet_state\":\"") + state + "\"") != std::string::npos,
+        "pet replay covers each product state");
+  }
+  coco::EventStore pet_store(config.database);
+  const auto timeline = pet_store.DayTimeline(config.source_id, "2026-01-01",
+                                              coco::ParseUtcSeconds("2026-01-01T00:00:54Z"));
+  for (const auto* state : {"active", "resting", "out_of_view", "offline"}) {
+    Require(timeline.find(std::string("\"state\":\"") + state + "\"") != std::string::npos,
+            "pet replay persists each timeline state");
+  }
 }

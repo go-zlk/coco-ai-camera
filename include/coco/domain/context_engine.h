@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "coco/domain/context.h"
+#include "coco/domain/pet_activity.h"
 #include "coco/domain/presence_state.h"
 
 namespace coco {
@@ -41,6 +42,7 @@ class ContextEngine {
 
  private:
   Context context_;
+  PetActivity activity_;
   PresenceState person_{"person"};
   PresenceState cat_{"cat"};
   Clock::time_point last_frame_;

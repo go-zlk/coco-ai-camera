@@ -39,16 +39,11 @@ ParsedServiceConfig ParseServiceConfig(const std::vector<std::string>& arguments
   if (arguments.size() == 1 && arguments.front() == "--help") {
     return {ServiceConfig{}, true};
   }
-  std::map<std::string, std::string> values{{"--source", ""},
-                                            {"--model", ""},
-                                            {"--source-id", "camera_1"},
-                                            {"--backend", "tensorrt"},
-                                            {"--db", "data/context.db"},
-                                            {"--port", "8090"},
-                                            {"--imgsz", "640"},
-                                            {"--conf", "0.25"},
-                                            {"--interval-ms", "1000"},
-                                            {"--seconds", "0"}};
+  std::map<std::string, std::string> values{
+      {"--web-root", "web"},       {"--source", ""},          {"--model", ""},
+      {"--source-id", "camera_1"}, {"--backend", "tensorrt"}, {"--db", "data/context.db"},
+      {"--port", "8090"},          {"--imgsz", "640"},        {"--conf", "0.25"},
+      {"--interval-ms", "1000"},   {"--seconds", "0"}};
   std::set<std::string> seen;
   for (size_t index = 0; index < arguments.size(); index += 2) {
     const auto& key = arguments[index];
@@ -59,6 +54,7 @@ ParsedServiceConfig ParseServiceConfig(const std::vector<std::string>& arguments
     values[key] = arguments[index + 1];
   }
   ServiceConfig config;
+  config.web_root = values.at("--web-root");
   config.source = values.at("--source");
   config.model = values.at("--model");
   config.source_id = values.at("--source-id");
@@ -76,6 +72,7 @@ ParsedServiceConfig ParseServiceConfig(const std::vector<std::string>& arguments
 std::string ServiceUsage() {
   return "coco-context --source <RTSP|csi|USB index> --model <raw.engine|model.onnx> "
          "[--backend tensorrt|onnx] [--db data/context.db] [--source-id camera_1] "
-         "[--port 8090] [--seconds 0] [--interval-ms 1000] [--imgsz 640] [--conf 0.25]\n";
+         "[--web-root web] [--port 8090] [--seconds 0] [--interval-ms 1000] [--imgsz 640] [--conf "
+         "0.25]\n";
 }
 }  // namespace coco

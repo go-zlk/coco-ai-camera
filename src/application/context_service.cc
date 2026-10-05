@@ -8,8 +8,10 @@
 #include <stdexcept>
 #include <vector>
 
+#include "coco/application/dashboard.h"
 #include "coco/capture/camera_source.h"
 #include "coco/domain/context_engine.h"
+#include "coco/domain/utc_time.h"
 #include "coco/perception/box_tracker.h"
 #include "coco/perception/detector.h"
 #include "coco/storage/event_store.h"
@@ -23,15 +25,14 @@ int RunContextService(const ServiceConfig& config, const std::function<bool()>& 
   coco::Context current;
   current.source_id = config.source_id;
   std::mutex context_mutex;
-  coco::ContextApi api(config.port, [&](const std::string& path) -> std::string {
-    if (path == "/v1/events") {
-      return store.Timeline();
-    }
-    if (path == "/v1/context/current" || path == "/health") {
+  coco::ContextApi api(config.port, [&](const std::string& path) -> HttpResponse {
+    Context snapshot;
+    {
       std::lock_guard<std::mutex> lock(context_mutex);
-      return coco::ContextJson(current);
+      snapshot = current;
     }
-    return {};
+    return DashboardResponse(path, config.web_root, snapshot, Clock::now(), store,
+                             ParseUtcSeconds(UtcNow()));
   });
   coco::CameraSource source(config.source);
   coco::ContextEngine engine(config.source_id);
@@ -40,12 +41,13 @@ int RunContextService(const ServiceConfig& config, const std::function<bool()>& 
   source.Start();
   auto started = coco::Clock::now(), next = started;
   uint64_t inferred = 0;
-  auto publish = [&](const std::vector<Event>& events) {
+  auto publish = [&](const std::vector<Event>& events, const std::string& at) {
     for (const auto& event : events) {
       store.Append(event);
       std::cout << "[event] " << event.category << ' ' << event.state << ' ' << event.observed_at
                 << '\n';
     }
+    store.RecordContext(engine.context(), ParseUtcSeconds(at));
     std::lock_guard<std::mutex> lock(context_mutex);
     current = engine.context();
   };
@@ -97,9 +99,10 @@ int RunContextService(const ServiceConfig& config, const std::function<bool()>& 
       if (now - frame->received < std::chrono::seconds(2)) {
         observation.tracks = tracker.Update(boxes, frame->received);
       }
-      publish(engine.Observe(observation, now));
+      publish(engine.Observe(observation, now), frame->observed_at);
     } else {
-      publish(engine.Tick(now, coco::UtcNow()));
+      auto at = UtcNow();
+      publish(engine.Tick(now, at), at);
       if (engine.context().health == "offline") {
         tracker.Reset();
       }

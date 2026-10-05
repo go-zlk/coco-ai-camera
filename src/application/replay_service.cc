@@ -10,6 +10,7 @@
 
 #include "coco/domain/context_engine.h"
 #include "coco/storage/event_store.h"
+#include "replay_output.h"
 #include "tracking_replay.h"
 namespace coco {
 namespace {
@@ -40,7 +41,8 @@ float Confidence(const std::string& value) {
 }
 }  // namespace
 size_t RunReplayService(const ReplayConfig& config, std::ostream& output) {
-  if (config.input.empty() || config.database.empty() || config.source_id.empty()) {
+  if (config.input.empty() || config.database.empty() || config.source_id.empty() ||
+      !std::isfinite(config.speed) || config.speed <= 0 || config.speed > 1000) {
     throw std::invalid_argument("Replay requires input, database and source_id");
   }
   std::ifstream input(config.input);
@@ -70,6 +72,7 @@ size_t RunReplayService(const ReplayConfig& config, std::ostream& output) {
   // Nonzero epoch preserves Context's uninitialized-time sentinel.
   const auto epoch = Clock::time_point(std::chrono::seconds(1));
   ContextEngine engine(config.source_id, epoch);
+  ReplayOutput emitter(config);
   uint64_t previous_ms = 0, sequence = 0;
   size_t rows = 0;
   while (read_line()) {
@@ -105,9 +108,7 @@ size_t RunReplayService(const ReplayConfig& config, std::ostream& output) {
     for (const auto& event : events) {
       store.Append(event);
     }
-    output << "{\"mode\":\"replay\",\"elapsed_ms\":" << elapsed
-           << ",\"transitions\":" << events.size()
-           << ",\"context\":" << ContextJson(engine.context(), now) << "}\n";
+    emitter.Emit(engine.context(), events, now, fields[6], store, output);
     previous_ms = elapsed;
     ++rows;
   }

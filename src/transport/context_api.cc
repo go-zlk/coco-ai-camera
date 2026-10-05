@@ -9,6 +9,13 @@
 #include <utility>
 namespace coco {
 ContextApi::ContextApi(int port, std::function<std::string(const std::string&)> handler)
+    : ContextApi(port, std::function<HttpResponse(const std::string&)>(
+                           [handler = std::move(handler)](const std::string& path) {
+                             auto body = handler(path);
+                             return body.empty() ? HttpResponse{404, "{\"error\":\"not_found\"}"}
+                                                 : HttpResponse{200, body};
+                           })) {}
+ContextApi::ContextApi(int port, std::function<HttpResponse(const std::string&)> handler)
     : handler_(std::move(handler)) {
   socket_ = socket(AF_INET, SOCK_STREAM, 0);
   if (socket_ < 0) {
@@ -26,6 +33,13 @@ ContextApi::ContextApi(int port, std::function<std::string(const std::string&)> 
     socket_ = -1;
     throw std::runtime_error("API bind failed; check port availability");
   }
+  socklen_t length = sizeof(addr);
+  if (getsockname(socket_, reinterpret_cast<sockaddr*>(&addr), &length) < 0) {
+    close(socket_);
+    socket_ = -1;
+    throw std::runtime_error("Cannot read API port");
+  }
+  port_ = ntohs(addr.sin_port);
 }
 ContextApi::~ContextApi() {
   Stop();
@@ -69,6 +83,7 @@ void ContextApi::Serve() {
       }
       request.append(bytes, count);
     }
+    std::string content_type = "application/json";
     std::string body = "{\"error\":\"bad_request\"}";
     int status = 400;
     auto end = request.find(' ', 4);
@@ -76,8 +91,10 @@ void ContextApi::Serve() {
         request.find("\r\n\r\n") != std::string::npos) {
       std::string path = request.substr(4, end - 4);
       try {
-        body = handler_(path);
-        status = body.empty() ? 404 : 200;
+        auto response = handler_(path);
+        body = std::move(response.body);
+        status = response.status;
+        content_type = std::move(response.content_type);
         if (body.empty()) {
           body = "{\"error\":\"not_found\"}";
         }
@@ -87,7 +104,8 @@ void ContextApi::Serve() {
       }
     }
     std::string response = "HTTP/1.1 " + std::to_string(status) +
-                           " Response\r\nContent-Type: application/json\r\nCache-Control: "
+                           " Response\r\nContent-Type: " + content_type +
+                           "\r\nCache-Control: "
                            "no-store\r\nConnection: close\r\nContent-Length: " +
                            std::to_string(body.size()) + "\r\n\r\n" + body;
     size_t sent = 0;

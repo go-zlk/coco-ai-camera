@@ -11,6 +11,8 @@ coco-ai-camera/
 ├── .editorconfig                 # 编辑器基础配置
 ├── CONTRIBUTING.md               # 开发与提交规则
 ├── apps/context_service/main.cc  # CLI 参数解析、应用启动、退出码
+├── apps/poc/main.cc              # 本地模拟与网页验证入口
+├── web/                          # 桌宠网页、状态和时间线展示
 ├── include/coco/                 # 公开接口，路径与模块对应
 │   ├── application/              # ServiceConfig、应用生命周期接口
 │   ├── domain/                   # Context、Event、时间与状态规则
@@ -62,7 +64,7 @@ coco-ai-camera/
 - capture 独占 VideoCapture，在采集线程更新单帧邮箱；应用线程取最新帧。
 - 检测器由应用线程调用；模型执行上下文与 CUDA stream 不跨线程共享。
 - HTTP 线程通过回调读取受互斥锁保护的上下文副本或查询存储。
-- storage 用互斥锁保护 SQLite 连接；只持久化状态变化。
+- storage 用互斥锁保护 SQLite 连接；持久化状态变化与有效状态区间。
 - 接收时间与窗口计算用单调时钟；持久化展示时间使用 UTC。
 
 `RunContextService` 使用调用者提供的停止回调。它不安装进程级信号处理；CLI 在收到 SIGINT/SIGTERM 后设置退出标志。每次服务调用创建自己的状态引擎，嵌入其他程序时由宿主提供停止策略。
@@ -73,14 +75,16 @@ coco-ai-camera/
 |---|---|---|
 | 目标跟踪（基线已实现） | perception/box_tracker；coco_tracking 独立库 | BoxDetection → TrackSnapshot |
 | 宠物身份 | perception 独立 identity | 目标裁剪/特征 → 身份候选与置信度 |
-| 活动/休息状态 | domain 的时序规则 | 多次观察 → 状态/事件 |
+| 活动/休息状态（功能基线已实现） | domain/pet_activity | 多次观察 → 状态/事件 |
 | 多摄像头 | application 调度；capture 源实例 | source_id 隔离的观察与健康状态 |
-| 当天时间线 | domain 的区间定义；storage 查询；transport API | 时间范围 → 有效观察区间 |
+| 当天时间线（已实现） | storage 区间与查询；application 路由 | 时间范围 → 有效观察区间 |
 | 个人基线与长期趋势 | domain 独立模块 | 历史观察 → 基线与偏差 |
-| 桌宠网页 | 将来独立 web 客户端 | Context API → 动画与时间线 |
+| 桌宠网页（已实现） | web 客户端；coco_dashboard 路由 | Context API → 动画与时间线 |
 | LLM 上下文 | application 独立用例与外部适配器 | 状态/趋势 → 明确来源的上下文 |
 
-这些是规划接口，当前未实现。不要为每个候选功能预先创建空目录或微服务。每次新增模块，应先确定输入、输出、所有者、失效语义和验证方式。
+表中已实现项为 POC 基线，其余为规划。不要为每个候选功能预先创建空目录或微服务。每次新增模块，应先确定输入、输出、所有者、失效语义和验证方式。
+
+`coco_dashboard` 组合 storage 与 transport，负责静态网页和查询路由；`coco_poc` 组合回放与网页服务。二者属于 application 层，不能被 domain 引用。
 
 ## 本地开发与停止控制
 

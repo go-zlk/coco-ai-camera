@@ -13,6 +13,7 @@
 #include "coco/domain/context_engine.h"
 #include "coco/perception/box_tracker.h"
 #include "coco/storage/event_store.h"
+#include "replay_output.h"
 
 namespace coco {
 namespace {
@@ -56,6 +57,7 @@ size_t RunTrackingReplay(const ReplayConfig& config, std::ostream& output) {
   auto epoch = Clock::time_point(std::chrono::seconds(1));
   ContextEngine engine(config.source_id, epoch);
   BoxTracker tracker;
+  ReplayOutput emitter(config);
   Sample sample;
   bool pending = false;
   uint64_t sequence = 0;
@@ -90,9 +92,7 @@ size_t RunTrackingReplay(const ReplayConfig& config, std::ostream& output) {
     for (const auto& event : events) {
       store.Append(event);
     }
-    output << "{\"mode\":\"replay\",\"elapsed_ms\":" << sample.elapsed_ms
-           << ",\"transitions\":" << events.size()
-           << ",\"context\":" << ContextJson(engine.context(), now) << "}\n";
+    emitter.Emit(engine.context(), events, now, sample.observed_at, store, output);
   };
   while (std::getline(input, line)) {
     if (!line.empty() && line.back() == '\r') {

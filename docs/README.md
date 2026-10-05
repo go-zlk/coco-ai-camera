@@ -46,3 +46,5 @@
 - [无需 Jetson 的本地开发与观察回放](development/local-development.md)
 
 - [短期主体跟踪与双猫回放](development/tracking.md)
+
+- [单猫四态 POC 验收](development/pet-poc.md)

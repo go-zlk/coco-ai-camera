@@ -4,6 +4,10 @@
 
 实施参考：[软件开发指引](software-development-guide.md)、[消费者产品开发路线](consumer-development-roadmap.md)、[MVP 软件实现架构图](diagrams/mvp-software-architecture.html)。本文定义候选产品体验；是否进入完整开发取决于消费者访谈、试用和付费证据。性能目标均需实测。
 
+## C++ POC 进度
+
+已实现本地四态、短期跟踪、时间区间、HTTP 与轮询网页。运行与已验证/待验证清单见 [POC 验证指引](development/pet-poc.md)。下文保留完整 MVP 目标；WebSocket、设备化和实机精度/稳定性仍待完成。
+
 ## 目标
 
 在 Jetson Orin Nano 上持续接入一台摄像头，判断一只猫当前属于四种状态之一，并让网页桌宠在局域网内同步显示，同时保存当天的状态时间线。

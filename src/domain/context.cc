@@ -33,7 +33,8 @@ std::string ContextJson(const Context& c, Clock::time_point now) {
                    ? -1
                    : std::chrono::duration<double>(now - c.updated).count();
   std::ostringstream s;
-  s << "{\"source_id\":" << JsonString(c.source_id)
+  s << "{\"source_id\":" << JsonString(c.source_id) << ",\"mode\":" << JsonString(c.mode)
+    << ",\"pet_state\":" << JsonString(c.pet_state) << ",\"pet_confidence\":" << c.pet_confidence
     << ",\"observed_at\":" << JsonString(c.observed_at) << ",\"health\":" << JsonString(c.health)
     << ",\"person\":" << JsonString(c.person) << ",\"cat\":" << JsonString(c.cat)
     << ",\"person_count\":" << c.person_count << ",\"cat_count\":" << c.cat_count

@@ -54,10 +54,10 @@ int main() {
   Require(threw, "source isolation");
   engine.FrameReceived(now(6), now(6));
   Require(engine.Tick(now(8), "time").empty(), "capture heartbeat independent of inference");
-  Require(engine.Tick(now(11), "time").size() == 2, "timeout emits both categories");
+  Require(engine.Tick(now(11), "time").size() == 3, "timeout emits both categories");
   Require(engine.Tick(now(12), "time").empty(), "offline event not repeated");
   Require(engine.context().updated == now(3), "offline preserves observation age");
-  Require(engine.Observe(sample(12, 5, 1), now(12)).empty(), "recovery debounce");
+  Require(engine.Observe(sample(12, 5, 1), now(12)).size() == 1, "recovery debounce");
   Require(engine.Observe(sample(13, 6, 1), now(13)).size() == 1, "recovery confirmation");
   Require(engine.context().health == "online" && engine.context().cat == "visible",
           "recovery state");
