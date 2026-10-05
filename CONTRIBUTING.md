@@ -55,3 +55,7 @@ ctest --test-dir build/domain --output-on-failure
 5. 按项目约定提交并推送。设备同步不删除用户采集数据、模型或配置。
 
 目前已配置 GitHub Actions 检查，但分支保护与必需状态检查需要仓库管理设置，不由工作流文件自动开启。
+
+## 无板端开发
+
+板子离线时使用 `scripts/build_local.sh`，并通过 `coco-replay` 验证状态与事件；完整流程见 [本地开发](docs/development/local-development.md)。所有模拟输出必须明确标记，独立于真实家庭数据。

@@ -21,7 +21,7 @@ struct Context {
 };
 std::string UtcNow();
 std::string JsonString(const std::string& value);
-std::string ContextJson(const Context& context);
+std::string ContextJson(const Context& context, Clock::time_point now = Clock::now());
 }  // namespace coco
 
 #endif  // COCO_DOMAIN_CONTEXT_H_

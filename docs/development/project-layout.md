@@ -65,7 +65,7 @@ coco-ai-camera/
 - storage 用互斥锁保护 SQLite 连接；只持久化状态变化。
 - 接收时间与窗口计算用单调时钟；持久化展示时间使用 UTC。
 
-`RunContextService` 当前用于单实例进程，其信号处理属于进程级生命周期。将来嵌入其他应用或支持多实例时，应改为显式停止令牌，不直接复用进程全局信号处理。
+`RunContextService` 使用调用者提供的停止回调。它不安装进程级信号处理；CLI 在收到 SIGINT/SIGTERM 后设置退出标志。每次服务调用创建自己的状态引擎，嵌入其他程序时由宿主提供停止策略。
 
 ## 能力扩展的位置
 
@@ -81,6 +81,10 @@ coco-ai-camera/
 | LLM 上下文 | application 独立用例与外部适配器 | 状态/趋势 → 明确来源的上下文 |
 
 这些是规划接口，当前未实现。不要为每个候选功能预先创建空目录或微服务。每次新增模块，应先确定输入、输出、所有者、失效语义和验证方式。
+
+## 本地开发与停止控制
+
+`Observation` 与 `ContextEngine` 已独立实现，同一状态引擎被实时服务和 `coco-replay` 复用。配置解析由 `coco_configuration` 模块负责；`coco_replay` 仅链接状态和存储。`COCO_BUILD_RUNTIME=OFF` 可在没有 OpenCV/CUDA 的机器运行这些能力。入口程序拥有信号处理，应用层通过停止回调退出，核心不修改进程信号。完整操作见 [本地开发](local-development.md)。
 
 ## 目前保留的技术边界
 

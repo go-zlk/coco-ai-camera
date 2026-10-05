@@ -53,6 +53,10 @@ void ContextApi::Serve() {
     if (client < 0) {
       continue;
     }
+#ifdef SO_NOSIGPIPE
+    int no_sigpipe = 1;
+    setsockopt(client, SOL_SOCKET, SO_NOSIGPIPE, &no_sigpipe, sizeof(no_sigpipe));
+#endif
     timeval timeout{2, 0};
     setsockopt(client, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
     setsockopt(client, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
@@ -88,7 +92,13 @@ void ContextApi::Serve() {
                            std::to_string(body.size()) + "\r\n\r\n" + body;
     size_t sent = 0;
     while (sent < response.size()) {
-      auto n = send(client, response.data() + sent, response.size() - sent, MSG_NOSIGNAL);
+      auto n = send(client, response.data() + sent, response.size() - sent,
+#ifdef MSG_NOSIGNAL
+                    MSG_NOSIGNAL
+#else
+                    0
+#endif
+      );
       if (n <= 0) {
         break;
       }

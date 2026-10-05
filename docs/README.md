@@ -42,3 +42,5 @@
 - [工程分层与目录规范](development/project-layout.md)
 - [C++ 运行时构建与运行](development/cpp-runtime.md)
 - [开发与贡献指引](../CONTRIBUTING.md)
+
+- [无需 Jetson 的本地开发与观察回放](development/local-development.md)

@@ -28,10 +28,10 @@ std::string JsonString(const std::string& value) {
   s << '"';
   return s.str();
 }
-std::string ContextJson(const Context& c) {
+std::string ContextJson(const Context& c, Clock::time_point now) {
   double age = c.updated == Clock::time_point{}
                    ? -1
-                   : std::chrono::duration<double>(Clock::now() - c.updated).count();
+                   : std::chrono::duration<double>(now - c.updated).count();
   std::ostringstream s;
   s << "{\"source_id\":" << JsonString(c.source_id)
     << ",\"observed_at\":" << JsonString(c.observed_at) << ",\"health\":" << JsonString(c.health)

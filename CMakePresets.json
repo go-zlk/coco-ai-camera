@@ -1,0 +1,49 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {"major": 3, "minor": 21, "patch": 0},
+  "configurePresets": [
+    {
+      "name": "local",
+      "displayName": "Local state and replay (no camera or GPU dependencies)",
+      "binaryDir": "${sourceDir}/build/local",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "COCO_BUILD_RUNTIME": "OFF",
+        "COCO_TENSORRT": "OFF",
+        "BUILD_TESTING": "ON"
+      }
+    },
+    {
+      "name": "cpu",
+      "displayName": "OpenCV CPU runtime",
+      "binaryDir": "${sourceDir}/build/cpu",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "COCO_BUILD_RUNTIME": "ON",
+        "COCO_TENSORRT": "OFF",
+        "BUILD_TESTING": "ON"
+      }
+    },
+    {
+      "name": "jetson",
+      "displayName": "Jetson native TensorRT runtime",
+      "binaryDir": "${sourceDir}/build/jetson",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "COCO_BUILD_RUNTIME": "ON",
+        "COCO_TENSORRT": "ON",
+        "BUILD_TESTING": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {"name": "local", "configurePreset": "local", "jobs": 2},
+    {"name": "cpu", "configurePreset": "cpu", "jobs": 2},
+    {"name": "jetson", "configurePreset": "jetson", "jobs": 2}
+  ],
+  "testPresets": [
+    {"name": "local", "configurePreset": "local", "output": {"outputOnFailure": true}},
+    {"name": "cpu", "configurePreset": "cpu", "output": {"outputOnFailure": true}},
+    {"name": "jetson", "configurePreset": "jetson", "output": {"outputOnFailure": true}}
+  ]
+}

@@ -27,7 +27,7 @@ cmake --build build -j2
 ctest --test-dir build --output-on-failure
 ```
 
-CPU ONNX 后端可用 `-DCOCO_TENSORRT=OFF` 构建。网络读取超时依赖 OpenCV FFmpeg 实现；CSI/USB 驱动读取没有同等超时保证。当前本地 API 使用 Linux socket，主验证平台为 Jetson Linux。
+CPU ONNX 后端可用 `-DCOCO_TENSORRT=OFF` 构建。网络读取超时依赖 OpenCV FFmpeg 实现；CSI/USB 驱动读取没有同等超时保证。当前本地 API 使用 POSIX socket，兼容 Linux/macOS 的 SIGPIPE 处理，主验证平台仍为 Jetson Linux。
 
 ## 模型准备
 
@@ -71,3 +71,5 @@ curl http://127.0.0.1:8090/v1/events
 API 仅监听 127.0.0.1，单线程处理、有限请求头和 2 秒客户端读写超时，是原型查询接口。公网发布前应替换为成熟 HTTP 服务并加入认证与请求治理。设备地址、账号和运行结果放在被忽略的 `local/` 或用户配置目录，不写入版本库。
 
 工程目录与依赖边界见 [工程分层](project-layout.md)，代码规范和检查命令见 [贡献指引](../../CONTRIBUTING.md)。
+
+板子离线时可先开发和测试 [本地状态核心与回放](local-development.md)。

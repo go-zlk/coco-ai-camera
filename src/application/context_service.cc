@@ -2,34 +2,20 @@
 
 #include <algorithm>
 #include <chrono>
-#include <cmath>
-#include <csignal>
 #include <cstdint>
 #include <iostream>
 #include <mutex>
-#include <optional>
 #include <stdexcept>
+#include <vector>
 
 #include "coco/capture/camera_source.h"
-#include "coco/domain/presence_state.h"
+#include "coco/domain/context_engine.h"
 #include "coco/perception/detector.h"
 #include "coco/storage/event_store.h"
 #include "coco/transport/context_api.h"
-namespace {
-volatile std::sig_atomic_t stopping = 0;
-void HandleInterrupt(int) {
-  stopping = 1;
-}
-}  // namespace
 namespace coco {
-int RunContextService(const ServiceConfig& config) {
-  if (config.source.empty() || config.model.empty() || config.port < 1 || config.port > 65535 ||
-      config.image_size < 32 || config.interval_ms < 1 || !std::isfinite(config.duration_seconds) ||
-      config.duration_seconds < 0 || !std::isfinite(config.confidence) || config.confidence <= 0 ||
-      config.confidence >= 1) {
-    throw std::invalid_argument("Invalid service configuration");
-  }
-  stopping = 0;
+int RunContextService(const ServiceConfig& config, const std::function<bool()>& stop_requested) {
+  ValidateServiceConfig(config);
   auto detector =
       coco::MakeDetector(config.backend, config.model, config.image_size, config.confidence);
   coco::EventStore store(config.database);
@@ -47,28 +33,28 @@ int RunContextService(const ServiceConfig& config) {
     return {};
   });
   coco::CameraSource source(config.source);
-  coco::PresenceState person("person"), cat("cat");
-  std::signal(SIGINT, HandleInterrupt);
-  std::signal(SIGTERM, HandleInterrupt);
+  coco::ContextEngine engine(config.source_id);
   api.Start();
   source.Start();
-  auto started = coco::Clock::now(), last_frame = started, next = started;
+  auto started = coco::Clock::now(), next = started;
   uint64_t inferred = 0;
-  auto emit = [&](std::optional<coco::Event> event) {
-    if (event) {
-      store.Append(*event);
-      std::cout << "[event] " << event->category << ' ' << event->state << ' ' << event->observed_at
-                << std::endl;
+  auto publish = [&](const std::vector<Event>& events) {
+    for (const auto& event : events) {
+      store.Append(event);
+      std::cout << "[event] " << event.category << ' ' << event.state << ' ' << event.observed_at
+                << '\n';
     }
+    std::lock_guard<std::mutex> lock(context_mutex);
+    current = engine.context();
   };
   std::cout << "[service] local API port " << config.port << "; raw media storage disabled\n";
-  while (!stopping && (config.duration_seconds == 0 ||
-                       std::chrono::duration<double>(coco::Clock::now() - started).count() <
-                           config.duration_seconds)) {
+  while (!stop_requested() && (config.duration_seconds == 0 ||
+                               std::chrono::duration<double>(coco::Clock::now() - started).count() <
+                                   config.duration_seconds)) {
     auto frame = source.Take(std::chrono::milliseconds(100));
     auto now = coco::Clock::now();
     if (frame && std::chrono::duration<double>(now - frame->received).count() < 2) {
-      last_frame = frame->received;
+      engine.FrameReceived(frame->received, now);
       if (now < next) {
         continue;
       }
@@ -89,32 +75,23 @@ int RunContextService(const ServiceConfig& config) {
           cc = std::max(cc, d.confidence);
         }
       }
-      emit(person.Update(people > 0, pc, true, frame->received, current.source_id,
-                         frame->observed_at));
-      emit(cat.Update(cats > 0, cc, true, frame->received, current.source_id, frame->observed_at));
-      std::lock_guard<std::mutex> lock(context_mutex);
-      current.health = "online";
-      current.person = person.state();
-      current.cat = cat.state();
-      current.person_count = people;
-      current.cat_count = cats;
-      current.sequence = frame->sequence;
-      current.observed_at = frame->observed_at;
-      current.updated = frame->received;
-      current.inference_ms = std::chrono::duration<double, std::milli>(now - begin).count();
-      current.dropped_frames = source.dropped();
-    } else if (std::chrono::duration<double>(now - last_frame).count() >= 5) {
-      auto at = coco::UtcNow();
-      emit(person.Update(false, 0, false, now, current.source_id, at));
-      emit(cat.Update(false, 0, false, now, current.source_id, at));
-      std::lock_guard<std::mutex> lock(context_mutex);
-      current.health = "offline";
-      current.person = person.state();
-      current.cat = cat.state();
-      current.person_count = 0;
-      current.cat_count = 0;
+      coco::Observation observation;
+      observation.source_id = config.source_id;
+      observation.observed_at = frame->observed_at;
+      observation.received = frame->received;
+      observation.sequence = frame->sequence;
+      observation.dropped_frames = source.dropped();
+      observation.person_count = people;
+      observation.cat_count = cats;
+      observation.person_confidence = pc;
+      observation.cat_confidence = cc;
+      observation.inference_ms = std::chrono::duration<double, std::milli>(now - begin).count();
+      publish(engine.Observe(observation, now));
+    } else {
+      publish(engine.Tick(now, coco::UtcNow()));
     }
   }
+
   source.Stop();
   api.Stop();
   std::cout << "[summary] inference_checks=" << inferred << " dropped_frames=" << source.dropped()

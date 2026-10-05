@@ -29,3 +29,11 @@ jobs:
           cmake -S . -B build/domain -DCOCO_BUILD_RUNTIME=OFF
           cmake --build build/domain -j2
           ctest --test-dir build/domain --output-on-failure
+  macos-local:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test local core
+        run: scripts/build_local.sh
+      - name: Exercise replay executable
+        run: ./build/local/coco-replay --input tests/fixtures/observations.csv --db /tmp/coco-replay-ci.db

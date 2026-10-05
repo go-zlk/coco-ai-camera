@@ -1,48 +1,29 @@
+#include <csignal>
 #include <iostream>
-#include <map>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "coco/application/context_service.h"
+#include "coco/application/service_config.h"
+
+namespace {
+volatile std::sig_atomic_t stop_requested = 0;
+void HandleInterrupt(int) {
+  stop_requested = 1;
+}
+}  // namespace
+
 int main(int argc, char** argv) {
   try {
-    std::map<std::string, std::string> args{{"--source-id", "camera_1"}, {"--backend", "tensorrt"},
-                                            {"--db", "data/context.db"}, {"--port", "8090"},
-                                            {"--imgsz", "640"},          {"--conf", "0.25"},
-                                            {"--interval-ms", "1000"},   {"--seconds", "0"}};
-    for (int i = 1; i < argc; ++i) {
-      std::string key = argv[i];
-      if (key == "--help") {
-        std::cout
-            << "coco-context --source <RTSP|csi|USB index> --model <raw.engine|model.onnx> "
-               "[--backend tensorrt|onnx] [--db data/context.db] [--source-id camera_1] [--port "
-               "8090] [--seconds 0] [--interval-ms 1000] [--imgsz 640] [--conf 0.25]\n";
-        return 0;
-      }
-      if ((!args.count(key) && key != "--source" && key != "--model") || i + 1 >= argc) {
-        throw std::runtime_error("Unknown argument or missing value");
-      }
-      args[key] = argv[++i];
+    auto parsed = coco::ParseServiceConfig(std::vector<std::string>(argv + 1, argv + argc));
+    if (parsed.help) {
+      std::cout << coco::ServiceUsage();
+      return 0;
     }
-    if (!args.count("--source") || !args.count("--model")) {
-      throw std::runtime_error("--source and --model are required");
-    }
-    int port = std::stoi(args["--port"]), size = std::stoi(args["--imgsz"]),
-        interval = std::stoi(args["--interval-ms"]);
-    double seconds = std::stod(args["--seconds"]);
-    float conf = std::stof(args["--conf"]);
-    coco::ServiceConfig config;
-    config.source = args["--source"];
-    config.model = args["--model"];
-    config.source_id = args["--source-id"];
-    config.backend = args["--backend"];
-    config.database = args["--db"];
-    config.port = port;
-    config.image_size = size;
-    config.interval_ms = interval;
-    config.duration_seconds = seconds;
-    config.confidence = conf;
-    return coco::RunContextService(config);
+    std::signal(SIGINT, HandleInterrupt);
+    std::signal(SIGTERM, HandleInterrupt);
+    return coco::RunContextService(parsed.config, [] { return stop_requested != 0; });
   } catch (const std::exception& error) {
     std::cerr << "[fatal] " << error.what() << '\n';
     return 1;
