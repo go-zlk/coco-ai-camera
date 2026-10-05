@@ -52,6 +52,8 @@ int main() {
   auto page = request("/");
   Require(page.find("text/html") != std::string::npos && page.find("Coco") != std::string::npos,
           "HTML delivery");
+  Require(request("/state-view.js").find("companionView") != std::string::npos,
+          "presentation script delivery");
   Require(request("/v1/context/current").find("\"pet_state\":\"unknown\"") != std::string::npos,
           "snapshot route");
   Require(request("/v1/timeline?day=2026-01-01").find("summary_seconds") != std::string::npos,

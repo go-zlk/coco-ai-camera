@@ -19,6 +19,10 @@ jobs:
         run: |
           CLANG_FORMAT=/tmp/coco-tools/bin/clang-format scripts/format_cpp.sh --check
           python3 scripts/check_layers.py
+      - name: Check companion presentation rules
+        run: |
+          node --check web/app.js
+          node tests/web/state_view_test.cjs
       - name: Build and test CPU runtime
         run: |
           cmake -S . -B build -DCOCO_TENSORRT=OFF -DCMAKE_BUILD_TYPE=Release

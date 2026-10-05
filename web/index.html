@@ -1,1 +1,68 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Coco · 此刻在家</title><link rel="stylesheet" href="/styles.css"></head><body><main><header><div><p class="eyebrow">COCO · HOME COMPANION</p><h1>此刻，在家。</h1></div><span id="mode" class="pill">连接中</span></header><section class="hero"><div class="scene" id="scene" data-state="unknown"><div class="sun"></div><div class="window"></div><div class="rug"></div><div class="cat" aria-hidden="true"><div class="ears"></div><div class="face"><span class="eyes">• •</span><span class="nose">⌄</span></div><div class="tail"></div></div><span class="zzz">z z z</span><div class="door"></div><div class="caption" id="animation-note">正在观察</div></div><div class="description"><p class="eyebrow">猫咪现在</p><h2 id="state">正在连接</h2><p id="explanation">等待第一份有效观察。</p><dl><div><dt>最后观察（UTC）</dt><dd id="observed">—</dd></div><div><dt>观察新鲜度</dt><dd id="freshness">—</dd></div><div><dt>视频源</dt><dd id="source">—</dd></div></dl><p class="fine">休息表示连续低位移，不代表确认睡眠。不可见也不代表猫离开了家。</p></div></section><section class="history"><div class="section-title"><div><p class="eyebrow">一天的节奏</p><h2>状态时间线</h2></div><label>UTC 日期 <input id="day" type="date"></label></div><div id="summary" class="summary"></div><div id="timeline" class="timeline" aria-label="状态区间"></div><p id="history-note" class="fine">未观察到的时间显示为未知，不计入活动或休息。</p><details><summary>查看最近区间</summary><div id="intervals"></div></details></section><footer><span id="connection">正在连接本地服务</span><span>原始视频默认不保存 · POC</span></footer></main><script src="/app.js"></script></body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Coco · 此刻在家</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main>
+    <header>
+      <div><p class="eyebrow">COCO · HOME COMPANION</p><h1>此刻，在家。</h1></div>
+      <div class="header-actions">
+        <span id="mode" class="pill">连接中</span>
+        <button id="compact" type="button" aria-pressed="false">专注陪伴</button>
+      </div>
+    </header>
+    <section class="hero" aria-label="猫咪当前状态">
+      <div class="scene" id="scene" data-state="unknown">
+        <div class="sun"></div><div class="window"></div><div class="rug"></div>
+        <div class="cat" aria-hidden="true">
+          <div class="ears"></div>
+          <div class="face"><span class="eyes">• •</span><span class="nose">⌄</span></div>
+          <div class="tail"></div>
+        </div>
+        <span class="zzz" aria-hidden="true">z z z</span><div class="door"></div>
+        <div class="caption" id="animation-note">正在观察</div>
+      </div>
+      <div class="description">
+        <p class="eyebrow">猫咪现在</p>
+        <h2 id="state" aria-live="polite">正在连接</h2>
+        <p id="explanation">等待第一份有效观察。</p>
+        <dl>
+          <div><dt>最近观察（UTC）</dt><dd id="observed">—</dd></div>
+          <div><dt>距离上次观察</dt><dd id="freshness">—</dd></div>
+        </dl>
+        <details class="source-details"><summary>观察来源</summary><p id="source">—</p></details>
+        <p class="fine">休息表示连续低位移，不代表确认睡眠。不可见也不代表猫离开了家。</p>
+      </div>
+    </section>
+    <section class="history" aria-label="每天的状态记录">
+      <div class="section-title">
+        <div><p class="eyebrow">一天的节奏</p><h2>状态时间线</h2></div>
+        <div class="date-controls">
+          <button id="previous-day" aria-label="前一天" type="button">←</button>
+          <label>UTC 日期 <input id="day" type="date"></label>
+          <button id="next-day" aria-label="后一天" type="button">→</button>
+          <button id="current-day" type="button">当前记录日</button>
+        </div>
+      </div>
+      <p id="history-status" class="fine" role="status">正在读取记录…</p>
+      <div id="summary" class="summary"></div>
+      <div id="timeline" class="timeline" aria-label="一天的状态区间"></div>
+      <div class="axis"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00 UTC</span></div>
+      <div class="legend" aria-label="时间线图例">
+        <span><i class="active"></i>活动</span><span><i class="resting"></i>休息</span>
+        <span><i class="out_of_view"></i>不可见</span><span><i class="offline"></i>离线</span>
+        <span><i class="unknown"></i>未知</span><span><i class="future"></i>尚未发生</span>
+      </div>
+      <p id="history-note" class="fine">未观察到的时间显示为未知，不计入活动或休息。</p>
+      <details><summary>查看状态区间</summary><div id="intervals"></div></details>
+    </section>
+    <footer><span id="connection" role="status">正在连接本地服务</span><span>原始视频默认不保存 · POC</span></footer>
+  </main>
+  <script src="/state-view.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

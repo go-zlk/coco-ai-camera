@@ -31,6 +31,9 @@ HttpResponse DashboardResponse(const std::string& path, const std::string& root,
   } else if (path == "/app.js") {
     file = "app.js";
     type = "text/javascript; charset=utf-8";
+  } else if (path == "/state-view.js") {
+    file = "state-view.js";
+    type = "text/javascript; charset=utf-8";
   } else if (path == "/styles.css") {
     file = "styles.css";
     type = "text/css; charset=utf-8";
