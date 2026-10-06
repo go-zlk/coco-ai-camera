@@ -90,15 +90,20 @@ int main() {
   config.input = COCO_PET_FIXTURE;
   config.database = (workspace.path / "pet.db").string();
   std::ostringstream pet_output;
-  Require(coco::RunReplayService(config, pet_output) == 47, "pet fixture row count");
+  Require(coco::RunReplayService(config, pet_output) == 51, "pet fixture row count");
   for (const auto* state : {"active", "resting", "out_of_view", "offline"}) {
     Require(
         pet_output.str().find(std::string("\"pet_state\":\"") + state + "\"") != std::string::npos,
         "pet replay covers each product state");
   }
+  for (const auto* evidence : {"held", "searching", "observed", "absent"}) {
+    Require(pet_output.str().find(std::string("\"pet_evidence\":\"") + evidence + "\"") !=
+                std::string::npos,
+            "replay covers confirmation stages");
+  }
   coco::EventStore pet_store(config.database);
   const auto timeline = pet_store.DayTimeline(config.source_id, "2026-01-01",
-                                              coco::ParseUtcSeconds("2026-01-01T00:00:54Z"));
+                                              coco::ParseUtcSeconds("2026-01-01T00:00:58Z"));
   for (const auto* state : {"active", "resting", "out_of_view", "offline"}) {
     Require(timeline.find(std::string("\"state\":\"") + state + "\"") != std::string::npos,
             "pet replay persists each timeline state");

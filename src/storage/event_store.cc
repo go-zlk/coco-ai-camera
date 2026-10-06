@@ -112,6 +112,9 @@ void EventStore::RecordContext(const Context& context, int64_t at) {
   if (std::find(states.begin(), states.end(), context.pet_state) == states.end()) {
     throw std::invalid_argument("Invalid pet state");
   }
+  // A held display decision is not a new observation of activity/rest.
+  const auto interval_state = context.pet_evidence == "held" ? "unknown" : context.pet_state;
+  const float interval_confidence = context.pet_evidence == "held" ? 0 : context.pet_confidence;
   std::lock_guard<std::mutex> lock(mutex_);
   if (sqlite3_exec(db_, "BEGIN IMMEDIATE", nullptr, nullptr, nullptr) != SQLITE_OK) {
     throw std::runtime_error(sqlite3_errmsg(db_));
@@ -152,9 +155,9 @@ void EventStore::RecordContext(const Context& context, int64_t at) {
       execute(s);
     };
     if (!id) {
-      insert(context.pet_state, at, at, true, context.pet_confidence);
+      insert(interval_state, at, at, true, interval_confidence);
     } else if (at > last) {
-      bool same = previous == context.pet_state && at - last <= 5;
+      bool same = previous == interval_state && at - last <= 5;
       int64_t end = std::min(at, last + 5);
       Statement close(db_, "UPDATE pet_intervals SET end_ts=?,last_seen_ts=?,is_open=? WHERE id=?");
       sqlite3_bind_int64(close.value, 1, end);
@@ -166,7 +169,7 @@ void EventStore::RecordContext(const Context& context, int64_t at) {
         if (at > end) {
           insert("unknown", end, at, false, 0);
         }
-        insert(context.pet_state, at, at, true, context.pet_confidence);
+        insert(interval_state, at, at, true, interval_confidence);
       }
     }
     if (sqlite3_exec(db_, "COMMIT", nullptr, nullptr, nullptr) != SQLITE_OK) {

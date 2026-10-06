@@ -60,4 +60,15 @@ int main() {
     invalid = true;
   }
   Require(invalid, "reject normalized invalid dates");
+  coco::EventStore held_store(":memory:");
+  const auto begin = coco::ParseUtcSeconds("2026-01-01T00:00:00Z");
+  context.pet_state = "resting";
+  context.pet_evidence = "observed";
+  held_store.RecordContext(context, begin);
+  context.pet_evidence = "held";
+  held_store.RecordContext(context, begin + 1);
+  held_store.RecordContext(context, begin + 3);
+  auto held_day = held_store.DayTimeline("test", "2026-01-01", begin + 3);
+  Require(held_day.find("\"resting\":1") != std::string::npos, "hold not counted as rest");
+  Require(held_day.find("\"unknown\":2") != std::string::npos, "held interval remains unknown");
 }

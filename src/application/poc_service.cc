@@ -94,6 +94,8 @@ int RunPocService(const PocConfig& config, const std::function<bool()>& stop_req
           snapshot.health = "offline";
           snapshot.pet_state = "offline";
           snapshot.pet_confidence = 0;
+          snapshot.pet_evidence = "offline";
+          snapshot.pet_last_seen_seconds = -1;
           snapshot.cat = "offline";
           snapshot.person = "offline";
           snapshot.cat_count = 0;

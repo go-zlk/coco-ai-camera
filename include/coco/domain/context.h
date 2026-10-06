@@ -18,6 +18,8 @@ struct Event {
 struct Context {
   std::string source_id, observed_at, health = "starting";
   std::string mode = "live", pet_state = "unknown";
+  std::string pet_evidence = "none";
+  double pet_last_seen_seconds = -1;
   float pet_confidence = 0;
   std::string person = "unknown", cat = "unknown";
   uint64_t sequence = 0, dropped_frames = 0;

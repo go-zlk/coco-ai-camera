@@ -11,6 +11,12 @@ assert.equal(view.shiftDay('2024-02-28', 1), '2024-02-29');
 assert.deepEqual(view.coverage({ active: 8, resting: 8, unknown: 32, offline: 1, out_of_view: 5 }),
   { visible: 16, total: 54, percent: 30 });
 assert.equal(view.coverage({ active: 0, resting: 0, unknown: 0 }).percent, 0);
+const held = { health: 'online', pet_state: 'resting', freshness_seconds: 1, pet_evidence: 'held' };
+assert.equal(view.state(held), 'resting');
+assert.match(view.hint(held).signal, /短暂丢失/);
+assert.equal(view.hint({ ...held, freshness_seconds: 6 }), null);
+assert.equal(view.hint({ ...held, health: 'offline' }), null);
+assert.match(view.hint({ ...held, pet_evidence: 'searching', pet_state: 'unknown' }).title, /身影/);
 console.log('Companion presentation tests passed');
 const { execFileSync } = require('node:child_process');
 for (const [zone, script] of [

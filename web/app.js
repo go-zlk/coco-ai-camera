@@ -69,6 +69,12 @@ function renderContext(context) {
   $('state').textContent = labels[state];
   $('animation-note').textContent = labels[state];
   $('explanation').textContent = descriptions[state];
+  const hint = companionView.hint(context);
+  if (hint) {
+    if (hint.title) $('state').textContent = hint.title;
+    $('animation-note').textContent = hint.signal;
+    $('explanation').textContent = hint.explanation;
+  }
   $('mode').textContent = context.mode === 'replay'
     ? '模拟回放 · 非真实宠物数据' : '本地实时观察';
   $('observed').textContent = context.observed_at

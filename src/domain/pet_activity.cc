@@ -8,6 +8,9 @@ std::optional<Event> PetActivity::Update(const Context& context, Clock::time_poi
                                          const std::string& observed_at) {
   std::string desired = "unknown";
   float confidence = 0;
+  evidence_ = "none";
+  last_seen_seconds_ =
+      last_confirmed_ ? std::chrono::duration<double>(now - *last_confirmed_).count() : -1;
   const TrackSnapshot* cat = nullptr;
   size_t observed_cats = 0;
   for (const auto& track : context.tracks) {
@@ -18,16 +21,22 @@ std::optional<Event> PetActivity::Update(const Context& context, Clock::time_poi
   }
   if (context.health == "offline") {
     desired = "offline";
-  } else if (context.cat == "out_of_view") {
-    desired = "out_of_view";
-  } else if (context.cat_count == 0 && !samples_.empty() &&
-             now - samples_.back().at <= std::chrono::seconds(2)) {
-    // Brief detection miss: retain the previous temporal decision, not a fabricated box.
-    desired = state_;
-    confidence = confidence_;
+    evidence_ = "offline";
+    last_confirmed_.reset();
+    last_seen_seconds_ = -1;
+  } else if (context.cat_count > 1 || observed_cats > 1) {
+    evidence_ = "ambiguous";
+    last_confirmed_.reset();
+    last_seen_seconds_ = -1;
+    samples_.clear();
+    moving_since_.reset();
+    track_id_ = 0;
   } else if (context.cat_count == 1 && observed_cats == 1 && cat->confirmed) {
+    evidence_ = "observed";
+    last_confirmed_ = now;
+    last_seen_seconds_ = 0;
     if (track_id_ != cat->track_id ||
-        (!samples_.empty() && now - samples_.back().at > std::chrono::seconds(2))) {
+        (!samples_.empty() && now - samples_.back().at > std::chrono::seconds(3))) {
       samples_.clear();
       moving_since_.reset();
     }
@@ -81,9 +90,24 @@ std::optional<Event> PetActivity::Update(const Context& context, Clock::time_poi
       confidence = cat->confidence;
     }
   } else {
-    samples_.clear();
-    moving_since_.reset();
-    track_id_ = 0;
+    if (last_confirmed_ && last_seen_seconds_ <= 3) {
+      // Hold only a recent decision. Counts and boxes continue to report actual detections.
+      evidence_ = "held";
+      desired = state_;
+      confidence = confidence_;
+    } else if (last_confirmed_ && last_seen_seconds_ <= 8) {
+      evidence_ = "searching";
+    } else if (context.cat_count == 0 && context.cat == "out_of_view") {
+      desired = "out_of_view";
+      evidence_ = "absent";
+    } else {
+      evidence_ = context.cat_count ? "confirming" : "none";
+    }
+    if (evidence_ != "held") {
+      samples_.clear();
+      moving_since_.reset();
+      track_id_ = 0;
+    }
   }
   if (desired == "offline" || desired == "out_of_view") {
     samples_.clear();

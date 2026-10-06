@@ -71,6 +71,8 @@ std::vector<Event> ContextEngine::Observe(const Observation& observation, Clock:
   AddEvent(events, activity_.Update(context_, observation.received, observation.observed_at));
   context_.pet_state = activity_.state();
   context_.pet_confidence = activity_.confidence();
+  context_.pet_evidence = activity_.evidence();
+  context_.pet_last_seen_seconds = activity_.last_seen_seconds();
   return events;
 }
 
@@ -90,6 +92,8 @@ std::vector<Event> ContextEngine::Tick(Clock::time_point now, const std::string&
   AddEvent(events, activity_.Update(context_, now, observed_at));
   context_.pet_state = activity_.state();
   context_.pet_confidence = activity_.confidence();
+  context_.pet_evidence = activity_.evidence();
+  context_.pet_last_seen_seconds = activity_.last_seen_seconds();
   // Keep the last successful observation timestamp for truthful freshness.
   return events;
 }

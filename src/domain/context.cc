@@ -35,6 +35,8 @@ std::string ContextJson(const Context& c, Clock::time_point now) {
   std::ostringstream s;
   s << "{\"source_id\":" << JsonString(c.source_id) << ",\"mode\":" << JsonString(c.mode)
     << ",\"pet_state\":" << JsonString(c.pet_state) << ",\"pet_confidence\":" << c.pet_confidence
+    << ",\"pet_evidence\":" << JsonString(c.pet_evidence)
+    << ",\"pet_last_seen_seconds\":" << c.pet_last_seen_seconds
     << ",\"observed_at\":" << JsonString(c.observed_at) << ",\"health\":" << JsonString(c.health)
     << ",\"person\":" << JsonString(c.person) << ",\"cat\":" << JsonString(c.cat)
     << ",\"person_count\":" << c.person_count << ",\"cat_count\":" << c.cat_count
