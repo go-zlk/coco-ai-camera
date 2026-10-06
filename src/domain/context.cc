@@ -40,7 +40,7 @@ std::string ContextJson(const Context& c, Clock::time_point now) {
     << ",\"person_count\":" << c.person_count << ",\"cat_count\":" << c.cat_count
     << ",\"sequence\":" << c.sequence << ",\"dropped_frames\":" << c.dropped_frames
     << ",\"inference_ms\":" << c.inference_ms << ",\"freshness_seconds\":" << age
-    << ",\"tracks\":[";
+    << ",\"timeline_window_supported\":true,\"tracks\":[";
   bool first = true;
   for (const auto& track : c.tracks) {
     if (!first) {

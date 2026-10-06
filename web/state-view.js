@@ -32,7 +32,29 @@ const companionView = (() => {
     return { visible, total, percent: total ? Math.round(visible / total * 100) : 0 };
   }
 
-  return { labels, duration, state, shiftDay, coverage };
+  function localDay(timestamp) {
+    const date = new Date(timestamp);
+    const pad = value => String(value).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  }
+
+  function dayWindow(day) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) throw new Error('Invalid day');
+    const [year, month, date] = day.split('-').map(Number);
+    const begin = new Date(year, month - 1, date);
+    if (localDay(begin) !== day) throw new Error('Invalid calendar date');
+    const end = new Date(year, month - 1, date + 1);
+    return { start: begin.getTime() / 1000, end: end.getTime() / 1000,
+      seconds: (end - begin) / 1000 };
+  }
+
+  function clock(timestamp, local = true, short = false) {
+    if (!local) return timestamp.slice(11, short ? 16 : 19);
+    return new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit',
+      ...(short ? {} : { second: '2-digit' }), hourCycle: 'h23' }).format(new Date(timestamp));
+  }
+
+  return { labels, duration, state, shiftDay, coverage, localDay, dayWindow, clock };
 })();
 
 if (typeof module !== 'undefined') module.exports = companionView;

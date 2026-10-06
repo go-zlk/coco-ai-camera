@@ -1,6 +1,7 @@
 #include "coco/application/dashboard.h"
 
 #include <fstream>
+#include <map>
 #include <sstream>
 #include <stdexcept>
 
@@ -15,10 +16,44 @@ HttpResponse DashboardResponse(const std::string& path, const std::string& root,
   if (path == "/v1/events") {
     return {200, store.Timeline()};
   }
-  if (path == "/v1/timeline" || path.rfind("/v1/timeline?day=", 0) == 0) {
+  if (path == "/v1/timeline" || path.rfind("/v1/timeline?", 0) == 0) {
     try {
-      std::string day =
-          path == "/v1/timeline" ? FormatUtcSeconds(reference).substr(0, 10) : path.substr(17);
+      std::map<std::string, std::string> parameters;
+      if (path != "/v1/timeline") {
+        std::istringstream query(path.substr(13));
+        std::string part;
+        while (std::getline(query, part, '&')) {
+          const auto equal = part.find('=');
+          const auto key = part.substr(0, equal);
+          if (equal == std::string::npos || (key != "day" && key != "start" && key != "end") ||
+              !parameters.emplace(key, part.substr(equal + 1)).second) {
+            throw std::invalid_argument("invalid query");
+          }
+        }
+        if (!parameters.count("day") || path.back() == '&') {
+          throw std::invalid_argument("missing day");
+        }
+      }
+      const std::string day =
+          parameters.empty() ? FormatUtcSeconds(reference).substr(0, 10) : parameters.at("day");
+      if (parameters.count("start") != parameters.count("end")) {
+        throw std::invalid_argument("incomplete window");
+      }
+      if (parameters.count("start")) {
+        auto seconds = [&](const std::string& key) {
+          const auto& value = parameters.at(key);
+          if (value.empty() || value.find_first_not_of("0123456789") != std::string::npos) {
+            throw std::invalid_argument("invalid seconds");
+          }
+          try {
+            return std::stoll(value);
+          } catch (const std::out_of_range&) {
+            throw std::invalid_argument("seconds overflow");
+          }
+        };
+        return {200, store.WindowTimeline(context.source_id, day, seconds("start"), seconds("end"),
+                                          reference)};
+      }
       return {200, store.DayTimeline(context.source_id, day, reference)};
     } catch (const std::invalid_argument&) {
       return {400, "{\"error\":\"invalid_utc_day\"}"};

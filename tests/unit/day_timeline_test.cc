@@ -35,6 +35,20 @@ int main() {
     Require(day.find("\"active\":4") != std::string::npos, "bounded carry-over only");
     Require(day.find("\"resting\":2") != std::string::npos, "rest duration");
     Require(day.find("\"unknown\":14") != std::string::npos, "restart gap is unknown");
+    const auto begin = coco::ParseUtcSeconds("2026-01-01T16:00:00Z");
+    auto local = store.WindowTimeline("test", "2026-01-02", begin, begin + 86400, t + 22);
+    Require(local.find("\"active\":6") != std::string::npos, "local day spans UTC midnight");
+    Require(local.find("2026-01-01T16:00:00Z") != std::string::npos, "explicit UTC window");
+    auto short_day =
+        store.WindowTimeline("test", "2026-03-08", coco::ParseUtcSeconds("2026-03-08T05:00:00Z"),
+                             coco::ParseUtcSeconds("2026-03-09T04:00:00Z"),
+                             coco::ParseUtcSeconds("2026-03-10T00:00:00Z"));
+    Require(short_day.find("\"unknown\":82800") != std::string::npos, "23 hour day");
+    auto long_day =
+        store.WindowTimeline("test", "2026-11-01", coco::ParseUtcSeconds("2026-11-01T04:00:00Z"),
+                             coco::ParseUtcSeconds("2026-11-02T05:00:00Z"),
+                             coco::ParseUtcSeconds("2026-11-03T00:00:00Z"));
+    Require(long_day.find("\"day_seconds\":90000") != std::string::npos, "25 hour day");
   }
   std::filesystem::remove(path);
   std::filesystem::remove(path.string() + "-wal");

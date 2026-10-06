@@ -179,7 +179,17 @@ void EventStore::RecordContext(const Context& context, int64_t at) {
 }
 std::string EventStore::DayTimeline(const std::string& source, const std::string& day,
                                     int64_t now) {
-  int64_t begin = ParseUtcSeconds(day + "T00:00:00Z"), end = std::min(begin + 86400, now);
+  const int64_t begin = ParseUtcSeconds(day + "T00:00:00Z");
+  return WindowTimeline(source, day, begin, begin + 86400, now);
+}
+std::string EventStore::WindowTimeline(const std::string& source, const std::string& day,
+                                       int64_t begin, int64_t window_end, int64_t now) {
+  const int64_t midnight = ParseUtcSeconds(day + "T00:00:00Z");
+  if (begin < midnight - 14 * 3600 || begin > midnight + 14 * 3600 ||
+      window_end < begin + 22 * 3600 || window_end > begin + 26 * 3600) {
+    throw std::invalid_argument("invalid day window");
+  }
+  const int64_t end = std::min(window_end, now);
   std::lock_guard<std::mutex> lock(mutex_);
   Statement query(db_,
                   "SELECT state,start_ts,end_ts,last_seen_ts,is_open FROM pet_intervals WHERE "
@@ -190,7 +200,11 @@ std::string EventStore::DayTimeline(const std::string& source, const std::string
   std::map<std::string, int64_t> totals{
       {"active", 0}, {"resting", 0}, {"out_of_view", 0}, {"offline", 0}, {"unknown", 0}};
   std::ostringstream out;
-  out << "{\"day\":" << JsonString(day) << ",\"timezone\":\"UTC\",\"intervals\":[";
+  out << "{\"day\":" << JsonString(day) << ",\"timezone\":"
+      << JsonString(begin == midnight && window_end - begin == 86400 ? "UTC" : "window")
+      << ",\"window_start\":" << JsonString(FormatUtcSeconds(begin))
+      << ",\"window_end\":" << JsonString(FormatUtcSeconds(window_end))
+      << ",\"day_seconds\":" << window_end - begin << ",\"intervals\":[";
   bool first = true;
   int rc;
   int64_t cursor = begin;

@@ -12,3 +12,12 @@ assert.deepEqual(view.coverage({ active: 8, resting: 8, unknown: 32, offline: 1,
   { visible: 16, total: 54, percent: 30 });
 assert.equal(view.coverage({ active: 0, resting: 0, unknown: 0 }).percent, 0);
 console.log('Companion presentation tests passed');
+const { execFileSync } = require('node:child_process');
+for (const [zone, script] of [
+  ['Asia/Shanghai', "assert.equal(view.localDay('2026-01-01T16:30:00Z'), '2026-01-02'); assert.equal(view.dayWindow('2026-01-02').start, Date.parse('2026-01-01T16:00:00Z') / 1000); assert.equal(view.clock('2026-01-01T16:30:00Z'), '00:30:00');"],
+  ['America/New_York', "assert.equal(view.dayWindow('2026-03-08').seconds, 82800); assert.equal(view.dayWindow('2026-11-01').seconds, 90000); assert.throws(() => view.dayWindow('2026-02-30'));"],
+]) {
+  execFileSync(process.execPath, ['-e', `const assert = require('node:assert/strict'); const view = require(${JSON.stringify(require.resolve('../../web/state-view.js'))}); ${script}`],
+    { env: { ...process.env, TZ: zone } });
+}
+console.log('Local calendar and daylight-saving tests passed');

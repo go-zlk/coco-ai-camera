@@ -60,6 +60,15 @@ int main() {
           "timeline route");
   Require(request("/v1/timeline?day=wrong").find("400 Response") != std::string::npos,
           "bad day route");
+  const std::string window = "/v1/timeline?day=2026-01-01&start=1767196800&end=1767283200";
+  Require(request(window).find("\"window_start\":\"2025-12-31T16:00:00Z\"") != std::string::npos,
+          "local day route");
+  for (const auto& invalid : {"&start=1", "&start=1&end=2", "&start=999999999999999999999&end=2",
+                              "&start=1x&end=2", "&day=2026-01-01", "&bad=1", "&"}) {
+    Require(request(std::string("/v1/timeline?day=2026-01-01") + invalid).find("400 Response") !=
+                std::string::npos,
+            "invalid window query");
+  }
   Require(request("/../README.md").find("404 Response") != std::string::npos, "asset whitelist");
   api.Stop();
 }
