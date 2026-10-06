@@ -209,10 +209,10 @@ std::string EventStore::DayTimeline(const std::string& source, const std::string
   };
   while ((rc = sqlite3_step(query.value)) == SQLITE_ROW) {
     std::string state = reinterpret_cast<const char*>(sqlite3_column_text(query.value, 0));
-    int64_t from = std::max(begin, sqlite3_column_int64(query.value, 1));
-    int64_t to = std::min(end, sqlite3_column_int64(query.value, 4)
-                                   ? sqlite3_column_int64(query.value, 3) + 5
-                                   : sqlite3_column_int64(query.value, 2));
+    int64_t from = std::max<int64_t>(begin, sqlite3_column_int64(query.value, 1));
+    int64_t to = std::min<int64_t>(end, sqlite3_column_int64(query.value, 4)
+                                            ? sqlite3_column_int64(query.value, 3) + 5
+                                            : sqlite3_column_int64(query.value, 2));
     if (from > cursor) {
       emit("unknown", cursor, std::min(from, end));
     }
