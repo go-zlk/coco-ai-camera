@@ -53,6 +53,17 @@ const companionView = (() => {
     return null;
   }
 
+  function character(context) {
+    if (context.mode !== 'live' || context.health !== 'online' ||
+        context.freshness_seconds < 0 || context.freshness_seconds > 5) return null;
+    const portrait = context.pet_portrait;
+    if (!portrait || !['matched', 'held'].includes(portrait.status)) return null;
+    const id = String(portrait.name || '').trim().toLowerCase();
+    const characters = { coco: { id: 'coco', name: 'Coco', file: 'coco-chibi-v1.svg' },
+      kui: { id: 'kui', name: 'Kui', file: 'kui-chibi-v1.svg' } };
+    return Object.hasOwn(characters, id) ? characters[id] : null;
+  }
+
   function coverage(totals) {
     const visible = totals.active + totals.resting;
     const total = Object.values(totals).reduce((sum, seconds) => sum + seconds, 0);
@@ -81,7 +92,7 @@ const companionView = (() => {
       ...(short ? {} : { second: '2-digit' }), hourCycle: 'h23' }).format(new Date(timestamp));
   }
 
-  return { labels, duration, state, hint, shiftDay, coverage, localDay, dayWindow, clock };
+  return { labels, duration, state, hint, character, shiftDay, coverage, localDay, dayWindow, clock };
 })();
 
 if (typeof module !== 'undefined') module.exports = companionView;

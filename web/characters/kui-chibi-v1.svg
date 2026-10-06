@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" role="img" aria-labelledby="title desc">
+<title id="title">Kui 的 Q 版角色</title><desc id="desc">根据注册照片绘制的毛绒猫咪插画，非真实照片。</desc>
+<defs>
+ <linearGradient id="coat" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#f3d6b5"/><stop offset=".65" stop-color="#e5b993"/><stop offset="1" stop-color="#bd8862"/></linearGradient>
+ <radialGradient id="white" cx=".42" cy=".22" r=".85"><stop stop-color="#fffef9"/><stop offset=".7" stop-color="#f6f1e9"/><stop offset="1" stop-color="#e2ddd6"/></radialGradient>
+ <radialGradient id="face" cx=".46" cy=".34" r=".73"><stop stop-color="#fffefb"/><stop offset=".76" stop-color="#faf5ef"/><stop offset="1" stop-color="#e8e2dc"/></radialGradient>
+ <linearGradient id="ear" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#efccc5"/><stop offset="1" stop-color="#d8a6a3"/></linearGradient>
+ <radialGradient id="eye"><stop stop-color="#9d795b"/><stop offset=".72" stop-color="#484249"/><stop offset="1" stop-color="#302e38"/></radialGradient>
+ <radialGradient id="cheek"><stop stop-color="#eec7bf" stop-opacity=".65"/><stop offset="1" stop-color="#eec7bf" stop-opacity="0"/></radialGradient>
+</defs>
+<!-- Fluffy tail and a compact body; no room or photographic background. -->
+<path d="M277 344C343 358 386 330 383 290C381 267 352 263 346 282C339 306 319 308 287 294" fill="url(#coat)" stroke="#edcfad" stroke-width="6"/>
+<path d="M368 273q19 17 3 43q17-7 15-30q-2-11-18-13" fill="url(#white)"/>
+<path d="M180 273q-37 43-30 80l-12 11l22 5q5 20 26 31l-1 12l25-6q30 17 65 1l22 7l-2-14q30-16 30-39l16-8l-18-11q-1-44-38-70Z" fill="url(#coat)" stroke="#bcb3ab" stroke-opacity=".27" stroke-width="2"/>
+<path d="M204 283q36-16 63 2l-5 24l14-4l-10 20l13 3l-14 18q7 30-12 51q-35 13-58-2q-11-26 0-52l-14-14l15-2l-11-20l15 4Z" fill="url(#white)"/>
+<ellipse cx="181" cy="393" rx="35" ry="25" fill="url(#white)"/>
+<ellipse cx="281" cy="393" rx="35" ry="25" fill="url(#white)"/>
+<path d="M173 393v9m12-10v12m88-11v10m13-10v11" stroke="#d6cbc5" stroke-width="3" stroke-linecap="round"/>
+<!-- Large triangular ears, rounded by fur. -->
+<path d="M133 178q-29-45-14-90q43 2 78 41Z" fill="url(#coat)" stroke="#edcfad" stroke-width="5"/>
+<path d="M142 161q-16-34-11-54q26 6 47 27Z" fill="url(#ear)"/>
+<path d="M290 131q40-39 75-42q14 40-14 92Z" fill="url(#coat)" stroke="#edcfad" stroke-width="5"/>
+<path d="M309 139q25-27 43-31q2 29-15 51Z" fill="url(#ear)"/>
+<!-- Soft tufts define the rounded face silhouette. -->
+<path d="M118 157q39-39 91-39l7-14l12 10l15-17l7 19l17-9l5 16q58 3 85 41l18 7l-9 15l16 21l-18 4l11 24l-18 2l5 20l-21-2q-20 51-97 57q-82 3-114-46l-22 1l6-20l-19-8l14-19l-14-8l17-17Z" fill="url(#face)" stroke="#c9bfb8" stroke-opacity=".32" stroke-width="2"/>
+<!-- Crown and cheek patches preserve the registered cat's coat palette. -->
+<path d="M122 157q34-37 89-37l6-14l11 10l15-18l7 20l18-9l5 17q49 0 79 39q-35 11-60-1q-20 12-31 37l-17-11l-16 13q-6-32-30-41q-41 25-76-5Z" fill="url(#coat)"/>
+<path d="M130 167q29-21 57-4q23 6 26 40q-5 36-33 46q-43 6-57-25q-11-27 7-57Z" fill="url(#coat)" opacity=".88"/>
+<path d="M286 163q33-18 57 6q16 20 8 47q-12 33-45 28q-29-4-32-36q-1-31 12-45Z" fill="url(#coat)" opacity=".88"/>
+<path d="M218 152q13 8 24-7q10 14 20 11l-5 20q-10 29-8 48l-29 0q6-35-2-72Z" fill="url(#face)"/>
+<!-- Eyes: muted iris, dark pupil and two crisp highlights. -->
+<ellipse cx="173" cy="213" rx="25" ry="29" fill="#e6ddd5"/>
+<ellipse cx="172" cy="208" rx="23" ry="27" fill="url(#eye)"/>
+<ellipse cx="172" cy="211" rx="12" ry="21" fill="#26242c"/>
+<ellipse cx="163" cy="198" rx="7" ry="8" fill="#fffdfb"/><circle cx="181" cy="220" r="3" fill="#f8e8d6"/>
+<ellipse cx="304" cy="213" rx="25" ry="29" fill="#e6ddd5"/>
+<ellipse cx="305" cy="208" rx="23" ry="27" fill="url(#eye)"/>
+<ellipse cx="305" cy="211" rx="12" ry="21" fill="#26242c"/>
+<ellipse cx="296" cy="198" rx="7" ry="8" fill="#fffdfb"/><circle cx="314" cy="220" r="3" fill="#f8e8d6"/>
+<path d="M147 195q19-24 39-7m96 0q22-15 42 8" fill="none" stroke="#bd8862" stroke-opacity=".6" stroke-width="5" stroke-linecap="round"/>
+<ellipse cx="143" cy="247" rx="28" ry="17" fill="url(#cheek)"/><ellipse cx="331" cy="247" rx="28" ry="17" fill="url(#cheek)"/>
+<ellipse cx="216" cy="260" rx="28" ry="21" fill="url(#white)"/><ellipse cx="260" cy="260" rx="28" ry="21" fill="url(#white)"/>
+<path d="M227 242q11-6 22 0q0 7-11 12q-11-6-11-12Z" fill="#d9a2a3"/>
+<path d="M231 242q6-2 11 0" fill="none" stroke="#f5d7cf" stroke-width="3" stroke-linecap="round"/>
+<path d="M238 253v8q-7 9-16 0m16 0q7 9 16 0" fill="none" stroke="#9c8080" stroke-width="2.5" stroke-linecap="round"/>
+<path d="M182 253l-31-7m31 17l-34 3m145-13l31-7m-31 17l34 3" stroke="#b4aaa5" stroke-width="2" stroke-linecap="round" opacity=".6"/>
+<path d="M118 235l15 3m211-3l15-3m-164 58l16 5m47-5l-15 5" stroke="#fffef8" stroke-width="4" stroke-linecap="round" opacity=".75"/>
+</svg>

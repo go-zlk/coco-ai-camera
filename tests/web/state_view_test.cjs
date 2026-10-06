@@ -17,6 +17,13 @@ assert.match(view.hint(held).signal, /短暂丢失/);
 assert.equal(view.hint({ ...held, freshness_seconds: 6 }), null);
 assert.equal(view.hint({ ...held, health: 'offline' }), null);
 assert.match(view.hint({ ...held, pet_evidence: 'searching', pet_state: 'unknown' }).title, /身影/);
+const named = { ...held, mode: 'live', pet_portrait: { status: 'matched', name: 'Coco' } };
+assert.equal(view.character(named).id, 'coco');
+assert.equal(view.character({ ...named, pet_portrait: { status: 'held', name: 'kui' } }).id, 'kui');
+assert.equal(view.character({ ...named, pet_portrait: { status: 'uncertain', name: 'coco' } }), null);
+assert.equal(view.character({ ...named, health: 'offline' }), null);
+assert.equal(view.character({ ...named, mode: 'demo' }), null);
+assert.equal(view.character({ ...named, pet_portrait: { status: 'matched', name: '../coco' } }), null);
 console.log('Companion presentation tests passed');
 const { execFileSync } = require('node:child_process');
 for (const [zone, script] of [
