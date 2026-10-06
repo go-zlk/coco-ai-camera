@@ -62,7 +62,9 @@ std::optional<Event> PetActivity::Update(const Context& context, Clock::time_poi
       moving_since_.reset();
     }
     samples_.push_back({now, cat->box});
-    while (!samples_.empty() && now - samples_.front().at > std::chrono::seconds(20)) {
+    // Keep the sample at/before the window boundary. Requiring a sample exactly
+    // twenty seconds old would never confirm rest with irregular inference timing.
+    while (samples_.size() > 1 && now - samples_[1].at >= std::chrono::seconds(20)) {
       samples_.pop_front();
     }
     bool resting = samples_.size() >= 10 && now - samples_.front().at >= std::chrono::seconds(20);

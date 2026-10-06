@@ -83,4 +83,20 @@ int main() {
   context.health = "offline";
   activity.Update(context, epoch + std::chrono::seconds(42), "time");
   Require(activity.state() == "offline" && activity.evidence() == "offline", "offline beats hold");
+  coco::PetActivity jittered;
+  context.health = "online";
+  context.cat_count = 1;
+  coco::TrackSnapshot still;
+  still.track_id = 1;
+  still.class_id = 15;
+  still.confirmed = still.observed = true;
+  still.confidence = .9;
+  still.box = {.2, .2, .15, .2};
+  for (int sample = 0; sample < 45; ++sample) {
+    auto now = epoch + std::chrono::milliseconds(sample * 511);
+    still.last_seen = now;
+    context.tracks = {still};
+    jittered.Update(context, now, "time");
+  }
+  Require(jittered.state() == "resting", "irregular sample timing can confirm rest");
 }
