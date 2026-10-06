@@ -25,6 +25,9 @@ int main() {
       coco::ParseServiceConfig({"--source", "csi", "--model", "model.onnx", "--backend", "onnx"})
           .config;
   Require(config.port == 8090 && config.source_id == "camera_1");
+  Require(coco::ParseServiceConfig(
+              {"--source", "csi", "--model", "raw.engine", "--pet-gallery", "data/gallery.json"})
+              .config.pet_gallery == "data/gallery.json");
   Reject({});
   Reject({"--source", "csi", "--model", "model", "--port", "8090oops"});
   Reject({"--source", "csi", "--model", "model", "--conf", "nan"});

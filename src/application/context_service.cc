@@ -14,6 +14,7 @@
 #include "coco/domain/utc_time.h"
 #include "coco/perception/box_tracker.h"
 #include "coco/perception/detector.h"
+#include "coco/perception/pet_appearance.h"
 #include "coco/storage/event_store.h"
 #include "coco/transport/context_api.h"
 namespace coco {
@@ -25,8 +26,30 @@ int RunContextService(const ServiceConfig& config, const std::function<bool()>& 
   coco::Context current;
   current.source_id = config.source_id;
   std::mutex context_mutex;
+  std::string current_jpeg;
+  Clock::time_point portrait_received{};
+  coco::PetAppearance appearance(config.pet_gallery);
   coco::ContextApi api(config.port, [&](const std::string& path) -> HttpResponse {
     Context snapshot;
+    if (path.rfind("/v1/pet/thumbnail?sequence=", 0) == 0) {
+      const auto value = path.substr(27);
+      if (value.empty() || value.find_first_not_of("0123456789") != std::string::npos) {
+        return {400, "{\"error\":\"invalid_sequence\"}"};
+      }
+      uint64_t sequence;
+      try {
+        sequence = std::stoull(value);
+      } catch (const std::exception&) {
+        return {400, "{\"error\":\"invalid_sequence\"}"};
+      }
+      std::lock_guard<std::mutex> lock(context_mutex);
+      if (current.health != "online" || current_jpeg.empty() ||
+          current.pet_portrait.sequence != sequence ||
+          Clock::now() - portrait_received > std::chrono::seconds(3)) {
+        return {404, "{\"error\":\"thumbnail_expired\"}"};
+      }
+      return {200, current_jpeg, "image/jpeg"};
+    }
     {
       std::lock_guard<std::mutex> lock(context_mutex);
       snapshot = current;
@@ -42,6 +65,9 @@ int RunContextService(const ServiceConfig& config, const std::function<bool()>& 
   auto started = coco::Clock::now(), next = started;
   uint64_t inferred = 0;
   auto publish = [&](const std::vector<Event>& events, const std::string& at) {
+    if (engine.context().health == "offline") {
+      appearance.Clear();
+    }
     for (const auto& event : events) {
       store.Append(event);
       std::cout << "[event] " << event.category << ' ' << event.state << ' ' << event.observed_at
@@ -49,7 +75,13 @@ int RunContextService(const ServiceConfig& config, const std::function<bool()>& 
     }
     store.RecordContext(engine.context(), ParseUtcSeconds(at));
     std::lock_guard<std::mutex> lock(context_mutex);
+    const auto previous_sequence = current.pet_portrait.sequence;
     current = engine.context();
+    current.pet_portrait = appearance.portrait();
+    current_jpeg = appearance.jpeg();
+    if (current.pet_portrait.sequence != previous_sequence) {
+      portrait_received = engine.context().updated;
+    }
   };
   std::cout << "[service] local API port " << config.port << "; raw media storage disabled\n";
   while (!stop_requested() && (config.duration_seconds == 0 ||
@@ -98,6 +130,7 @@ int RunContextService(const ServiceConfig& config, const std::function<bool()>& 
       observation.inference_ms = std::chrono::duration<double, std::milli>(now - begin).count();
       if (now - frame->received < std::chrono::seconds(2)) {
         observation.tracks = tracker.Update(boxes, frame->received);
+        appearance.Observe(*frame, observation.tracks);
       }
       publish(engine.Observe(observation, now), frame->observed_at);
     } else {

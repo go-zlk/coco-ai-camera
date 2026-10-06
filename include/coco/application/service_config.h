@@ -12,6 +12,7 @@ struct ServiceConfig {
   std::string backend = "tensorrt";
   std::string database = "data/context.db";
   std::string web_root = "web";
+  std::string pet_gallery;
   int port = 8090;
   int image_size = 640;
   int interval_ms = 1000;

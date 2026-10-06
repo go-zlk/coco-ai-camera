@@ -42,7 +42,13 @@ std::string ContextJson(const Context& c, Clock::time_point now) {
     << ",\"person_count\":" << c.person_count << ",\"cat_count\":" << c.cat_count
     << ",\"sequence\":" << c.sequence << ",\"dropped_frames\":" << c.dropped_frames
     << ",\"inference_ms\":" << c.inference_ms << ",\"freshness_seconds\":" << age
-    << ",\"timeline_window_supported\":true,\"tracks\":[";
+    << ",\"timeline_window_supported\":true,\"pet_portrait\":{\"status\":"
+    << JsonString(c.pet_portrait.status) << ",\"name\":" << JsonString(c.pet_portrait.name)
+    << ",\"track_id\":" << c.pet_portrait.track_id << ",\"sequence\":" << c.pet_portrait.sequence
+    << ",\"observed_at\":" << JsonString(c.pet_portrait.observed_at)
+    << ",\"similarity\":" << c.pet_portrait.similarity
+    << ",\"thumbnail_available\":" << (c.pet_portrait.thumbnail_available ? "true" : "false")
+    << "},\"tracks\":[";
   bool first = true;
   for (const auto& track : c.tracks) {
     if (!first) {
